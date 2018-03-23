@@ -29,6 +29,7 @@ $factory->define(App\TransactionIn::class, function (Faker\Generator $faker) {
     return [
         'account_id' => $faker->randomDigit,
         'state_id' => $faker->randomDigit,
+        'payment_id' => $faker->randomDigit,
         'amount' => $faker->randomDigit,
         'description' => $faker->text,
         'date' => $faker->date('Y-m-d'),

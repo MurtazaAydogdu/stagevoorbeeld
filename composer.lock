@@ -1535,16 +1535,16 @@
         },
         {
             "name": "kantoor-f12/auth-sdk-php",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "git@github.com:kantoor-f12/auth-sdk-php.git",
-                "reference": "3ecc90e5ed22d8e86beb52d7587930e3b79f8adf"
+                "reference": "ed8a74d078a96d03d1e34b9b96f8b8bf11a9f7ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kantoor-f12/auth-sdk-php/zipball/3ecc90e5ed22d8e86beb52d7587930e3b79f8adf",
-                "reference": "3ecc90e5ed22d8e86beb52d7587930e3b79f8adf",
+                "url": "https://api.github.com/repos/kantoor-f12/auth-sdk-php/zipball/ed8a74d078a96d03d1e34b9b96f8b8bf11a9f7ac",
+                "reference": "ed8a74d078a96d03d1e34b9b96f8b8bf11a9f7ac",
                 "shasum": ""
             },
             "require": {
@@ -1567,10 +1567,10 @@
             ],
             "description": "The official php SDK for the auth server",
             "support": {
-                "source": "https://github.com/kantoor-f12/auth-sdk-php/tree/1.0.2",
+                "source": "https://github.com/kantoor-f12/auth-sdk-php/tree/1.0.3",
                 "issues": "https://github.com/kantoor-f12/auth-sdk-php/issues"
             },
-            "time": "2018-03-21T10:55:19+00:00"
+            "time": "2018-03-23T09:05:38+00:00"
         },
         {
             "name": "laravel/lumen-framework",
