@@ -132,45 +132,14 @@ class TransactionInController extends ApiController
     public function show($id)
     {
         try {
-            $payment = $this->mollie->payments->get($id);
+            $transaction = TransactionIn::findOrFail($id);
 
-            if ($payment) {
-                return response()->json($payment);
-            }
-        } catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
-        }
-    }
-
-    public function checkStates()
-    {
-        try {
-            $payments = $this->mollie->payments->all();
-
-            foreach ($payments as $payment) {
-                $paymentCreatedDate = new \DateTime($payment->createdDatetime);
-                $stripPaymentDate = $paymentCreatedDate->format('Y-m-d');
-                $today = date('Y-m-d');
-
-                if ($today == $stripPaymentDate) {
-
-                    $state = State::where('name', '=', $payment->status)->get();
-
-                    if ($state) {
-                        $transaction = DB::table('transaction_ins')
-                            ->where('payment_id', $payment->id)
-                            ->update(['state_id' => $state[0]->id]);
-
-                        if ($transaction) {
-                            return response()->json(['status' => 'success', 'message' => 'Transaction state has been changed']);
-                        }
-                        return response()->json(['status' => 'failed', 'message' => 'Transaction state has not been changed']);
-                    }
-                }
+            if ($transaction) {
+                return response()->json(['status' => 'success', 'transaction' => $transaction]);
             }
         }
-        catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
         }
     }
 
