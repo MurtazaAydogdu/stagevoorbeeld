@@ -1,4 +1,4 @@
 env = {
-    SWAGGER_URL: 'transaction_api.test/api/swagger.json'
+    SWAGGER_URL: 'http://localhost:8888/transaction_api/public/api/swagger.json'
 };
 

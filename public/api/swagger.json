@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Transaction API",
+        "title": "Transaction-In-In API",
         "contact": {
             "name": "DigitaleFactuur",
             "url": "https://digitalefactuur.nl/"
@@ -248,7 +248,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
@@ -278,7 +278,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
@@ -368,7 +368,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
@@ -443,7 +443,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
@@ -473,7 +473,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
@@ -494,7 +494,7 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Transaction id to delete",
+                        "description": "Transaction-In-In id to delete",
                         "required": true,
                         "type": "integer"
                     }
@@ -563,7 +563,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Transaction overview."
+                        "description": "Transaction-In-In overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
