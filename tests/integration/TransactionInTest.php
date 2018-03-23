@@ -29,4 +29,14 @@ class TransactionInTest extends TestCase
             ->seeJson();
     }
 
+    /**
+     * @test
+     */
+    public function test_if_we_can_get_all_transactions() {
+
+        $this->get('transaction/in', ['HTTP_Authorization' => $this->token])
+            ->seeStatusCode(200)
+            ->seeJson();
+    }
+
 }

@@ -65,15 +65,8 @@ class TransactionInController extends ApiController
     private $mollie;
 
     public function __construct(){
-        $this->middleware('auth', ['except' => ['checkStates']]);
-        $this->setNewMollieApiClient();
+        $this->middleware('auth');
     }
-
-    private function setNewMollieApiClient() {
-        $this->mollie = new Mollie_API_Client;
-        $this->mollie->setApiKey(env('MOLLIE_TEST_API_KEY'));
-    }
-
 
     /**
      * Display a listing of the resource.
@@ -99,13 +92,13 @@ class TransactionInController extends ApiController
      */
     public function index()
     {
-        try {
-            $payments = $this->mollie->payments->all();
+        $transaction = TransactionIn::all();
 
-            return response()->json($payments);
-        } catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        if ($transaction) {
+            return response()->json(['status' => 'success', 'transaction' => $transaction]);
         }
+        return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
+
     }
 
     /**
