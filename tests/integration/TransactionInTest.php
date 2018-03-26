@@ -50,4 +50,19 @@ class TransactionInTest extends TestCase
             ->seeJson();
     }
 
+    /**
+     * @test
+     */
+    public function test_if_we_can_update_a_single_transaction_by_id() {
+        $transaction = factory(TransactionIn::class)->create();
+
+        $transaction->description = 'This is the update test';
+
+        $this->patch('transaction/in/edit/' . $transaction->id, $transaction->toArray(), ['HTTP_Authorization' => $this->token])
+            ->seeStatusCode(200)
+            ->seeJson();
+
+
+    }
+
 }

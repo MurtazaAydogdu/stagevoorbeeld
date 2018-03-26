@@ -283,9 +283,27 @@ class TransactionInController extends ApiController
      *     )
      * )
      */
-    public function update(Request $request, $id)
-    {
+    public function update(Request $request, $id) {
+        try {
+            $transaction = TransactionIn::findOrFail($id);
 
+            if ($transaction) {
+                $transaction->account_id = $request->input('account_id');
+                $transaction->state_id = $request->input('state_id');
+                $transaction->payment_id = $request->input('payment_id');
+                $transaction->amount = $request->input('amount');
+                $transaction->description = $request->input('description');
+                $transaction->origin = $request->input('origin');
+                $save = $transaction->update();
+
+                if ($save){
+                    return response()->json(['status' => 'success', 'transaction' => $transaction]);
+                }
+            }
+        }
+        catch (ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
+        }
     }
 
     /**
