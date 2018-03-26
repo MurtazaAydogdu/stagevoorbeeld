@@ -223,14 +223,22 @@ StateController extends ApiController
             'description' => 'required'
         ]);
 
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->name = $request->input('name');
-        $state->description = $request->input('description');
-        $state->update();
+            $state->name = $request->input('name');
+            $state->description = $request->input('description');
+            $check = $state->update();
 
-        return response()->json(['state' => $state]);
+            if ($check) {
+                return response()->json(['status' => 'success', 'messages' => 'State has been updated', 'state' => $state]);
+            }
+        }
 
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
+        }
     }
 
     /**
@@ -262,10 +270,31 @@ StateController extends ApiController
      * )
      */
     public function delete($id){
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->delete();
+            $check = $state->delete();
 
-        return response()->json('State has been deleted');
+            if ($check) {
+                return response()->json('State has been deleted');
+            }
+        }
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error couldnot delete the state ']);
+        }
+
+    }
+
+    public function restore($id) {
+
+        try {
+            State::withTrashed()->findOrFail($id)->restore();
+        }
+        catch(ModelNotFoundException $e) { 
+            return response()->json(['status' => 'failed', 'message' => 'State not found']);
+        }
+        return response()->json(['status' => 'success','State has been restored']);
+
     }
 }

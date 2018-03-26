@@ -44,30 +44,52 @@ class StateTest extends TestCase
            ->seeStatusCode(200)
            ->seeJson();
    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_update_a_single_state(){
-//
-//        $state = factory(State::class)->create();
-//
-//        $state->name = 'Open';
-//        $state->description = 'Transaction is open';
-//
-//        $this->patch('state/' . $state->id, $state->toArray(), ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_update_a_single_state(){
+
+       $state = factory(State::class)->create();
+
+       $state->name = 'Open';
+       $state->description = 'Transaction is open';
+
+       $this->patch('state/edit/' . $state->id, $state->toArray(), ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_delete_a_single_state(){
+       $state = factory(State::class)->create();
+
+       $this->delete('state/delete/' . $state->id,['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(401);
 //            ->seeJson();
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_delete_a_single_state(){
-//        $state = factory(State::class)->create();
-//
-//        $this->delete('state/' . $state->id,['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(401);
-////            ->seeJson();
-//    }
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_restore_a_single_state() {
+
+        //only for this test
+        if ((\App::environment() == 'testing') && array_key_exists("HTTP_Authorization",  LRequest::server())) {
+            $headers['Authorization'] = LRequest::server()["HTTP_Authorization"];
+        }
+
+        $state = factory(State::class)->create();
+
+        $delete = $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => $this->token]);
+
+        if ($delete) {
+            $this->delete('state/restore/' . $state->id, ['HTTP_Authorization' => $this->token])
+                ->seeStatusCode(200)
+                ->seeJson();
+        }
+
+   }
 }
