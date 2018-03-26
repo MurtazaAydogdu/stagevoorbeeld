@@ -70,7 +70,7 @@ StateController extends ApiController
         if ($states) {
             return response()->json(['status' => 'success', 'states' => $states]);
         }
-        return response()->json(['status' => 'success', 'messages' => 'Error no states found']);
+        return response()->json(['status' => 'success', 'message' => 'Error no states found']);
     }
 
     /**
