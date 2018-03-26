@@ -270,10 +270,19 @@ StateController extends ApiController
      * )
      */
     public function delete($id){
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->delete();
+            $check = $state->delete();
 
-        return response()->json('State has been deleted');
+            if ($check) {
+                return response()->json('State has been deleted');
+            }
+        }
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error couldnot delete the state ']);
+        }
+
     }
 }

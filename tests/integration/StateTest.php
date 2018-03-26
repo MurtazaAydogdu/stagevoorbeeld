@@ -59,15 +59,15 @@ class StateTest extends TestCase
            ->seeStatusCode(200)
            ->seeJson();
    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_delete_a_single_state(){
-//        $state = factory(State::class)->create();
-//
-//        $this->delete('state/' . $state->id,['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(401);
-////            ->seeJson();
-//    }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_delete_a_single_state(){
+       $state = factory(State::class)->create();
+
+       $this->delete('state/delete/' . $state->id,['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(401);
+//            ->seeJson();
+   }
 }
