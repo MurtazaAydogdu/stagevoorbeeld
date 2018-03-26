@@ -62,7 +62,18 @@ class TransactionInTest extends TestCase
             ->seeStatusCode(200)
             ->seeJson();
 
+    }
 
+    /**
+     * @test
+     */
+    public function test_if_we_can_delete_a_single_transaction_by_id() {
+        
+        $transaction = factory(TransactionIn::class)->create();
+
+        $this->delete('transaction/in/delete/' . $transaction->id, ['HTTP_Authorization' => $this->token])
+            ->seeStatuscode(200)
+            ->seeJson();
     }
 
 }

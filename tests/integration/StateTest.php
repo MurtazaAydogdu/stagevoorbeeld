@@ -5,11 +5,11 @@ use \App\State;
 
 class StateTest extends TestCase
 {
-    protected $baseUrl = 'http://transaction_api.test';
+    protected $baseUrl = 'localhost:8888/';
 
     use DatabaseTransactions;
 
-    private $token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MjExMDg4MDIsImV4cCI6MTU1MjY0NDgwMiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkFjY291bnRfSUQiOiIxIiwiU291cmNlIjoiREYifQ.TckP4zbdclTfzMDeDuN1hWQUjiKKipHZi0MVQNSDeEE';
+    private $token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjE2LCJyb2xlIjoiREVWIiwiaWF0IjoxNTIxNTUxMTg2LCJleHAiOjM5MzE1NTQ3ODYsImF1ZCI6WyJkaWdpdGFsZWZhY3R1dXIiXSwiaXNzIjoiQXV0aGVudGljYXRpb24gU2VydmVyIn0.CkeCIKPGWIqBRDPVkw91vg9Pw2loHEnwqYxiLYUWkP20D9G68HayeiUKCsI8XMyMiwTlz77ufOmDbgEaLyzBcQ';
 
 
     /**
@@ -19,7 +19,7 @@ class StateTest extends TestCase
 
         $state = factory(State::class)->create();
 
-        $this->post('state', $state->toArray(), ['HTTP_Authorization' => $this->token])
+        $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => $this->token])
             ->seeStatusCode(200)
             ->seeJson();
     }
