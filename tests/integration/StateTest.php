@@ -5,11 +5,11 @@ use \App\State;
 
 class StateTest extends TestCase
 {
-    protected $baseUrl = 'http://transaction_api.test';
+    protected $baseUrl = 'localhost:8888/';
 
     use DatabaseTransactions;
 
-    private $token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MjExMDg4MDIsImV4cCI6MTU1MjY0NDgwMiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkFjY291bnRfSUQiOiIxIiwiU291cmNlIjoiREYifQ.TckP4zbdclTfzMDeDuN1hWQUjiKKipHZi0MVQNSDeEE';
+    private $token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjE2LCJyb2xlIjoiREVWIiwiaWF0IjoxNTIxNTUxMTg2LCJleHAiOjM5MzE1NTQ3ODYsImF1ZCI6WyJkaWdpdGFsZWZhY3R1dXIiXSwiaXNzIjoiQXV0aGVudGljYXRpb24gU2VydmVyIn0.CkeCIKPGWIqBRDPVkw91vg9Pw2loHEnwqYxiLYUWkP20D9G68HayeiUKCsI8XMyMiwTlz77ufOmDbgEaLyzBcQ';
 
 
     /**
@@ -19,77 +19,77 @@ class StateTest extends TestCase
 
         $state = factory(State::class)->create();
 
-        $this->post('state', $state->toArray(), ['HTTP_Authorization' => $this->token])
+        $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => $this->token])
             ->seeStatusCode(200)
             ->seeJson();
     }
 
-//    /**
-//     * @test
-//     */
-//    public function test_if_the_validate_returns_an_error_when_sending_name() {
-//
-//        $state = ['name' => 'Open'];
-//
-//        $this->post('state', $state, ['HTTP_Authorization' => $this->token] )
-//            ->seeStatusCode(422);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_the_validate_returns_an_error_when_sending_description() {
-//
-//        $state = ['description' => 'The transaction is paid'];
-//
-//        $this->post('state', $state, ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(422);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_get_all_states(){
-//
-//        $this->get('states', ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
+   /**
+    * @test
+    */
+   public function test_if_we_can_get_all_states(){
+
+       $this->get('states', ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_get_a_single_state() {
+       $state = factory(State::class)->create();
+
+       $this->get('state/' . $state->id, ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_update_a_single_state(){
+
+       $state = factory(State::class)->create();
+
+       $state->name = 'Open';
+       $state->description = 'Transaction is open';
+
+       $this->patch('state/edit/' . $state->id, $state->toArray(), ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_delete_a_single_state(){
+       $state = factory(State::class)->create();
+
+       $this->delete('state/delete/' . $state->id,['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(401);
 //            ->seeJson();
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_get_a_single_state() {
-//        $state = factory(State::class)->create();
-//
-//        $this->get('state/' . $state->id, ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
-//            ->seeJson();
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_update_a_single_state(){
-//
-//        $state = factory(State::class)->create();
-//
-//        $state->name = 'Open';
-//        $state->description = 'Transaction is open';
-//
-//        $this->patch('state/' . $state->id, $state->toArray(), ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
-//            ->seeJson();
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_delete_a_single_state(){
-//        $state = factory(State::class)->create();
-//
-//        $this->delete('state/' . $state->id,['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(401);
-////            ->seeJson();
-//    }
+   }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_restore_a_single_state() {
+
+        //only for this test
+        if ((\App::environment() == 'testing') && array_key_exists("HTTP_Authorization",  LRequest::server())) {
+            $headers['Authorization'] = LRequest::server()["HTTP_Authorization"];
+        }
+
+        $state = factory(State::class)->create();
+
+        $delete = $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => $this->token]);
+
+        if ($delete) {
+            $this->delete('state/restore/' . $state->id, ['HTTP_Authorization' => $this->token])
+                ->seeStatusCode(200)
+                ->seeJson();
+        }
+
+   }
 }
