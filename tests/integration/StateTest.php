@@ -70,4 +70,26 @@ class StateTest extends TestCase
            ->seeStatusCode(401);
 //            ->seeJson();
    }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_restore_a_single_state() {
+
+        //only for this test
+        if ((\App::environment() == 'testing') && array_key_exists("HTTP_Authorization",  LRequest::server())) {
+            $headers['Authorization'] = LRequest::server()["HTTP_Authorization"];
+        }
+
+        $state = factory(State::class)->create();
+
+        $delete = $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => $this->token]);
+
+        if ($delete) {
+            $this->delete('state/restore/' . $state->id, ['HTTP_Authorization' => $this->token])
+                ->seeStatusCode(200)
+                ->seeJson();
+        }
+
+   }
 }
