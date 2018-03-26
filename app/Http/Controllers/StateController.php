@@ -67,7 +67,10 @@ StateController extends ApiController
     public function index(){
         $states = State::all();
 
-        return response()->json(['states' => $states]);
+        if ($states) {
+            return response()->json(['status' => 'success', 'states' => $states]);
+        }
+        return response()->json(['status' => 'success', 'message' => 'Error no states found']);
     }
 
     /**
