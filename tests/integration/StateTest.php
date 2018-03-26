@@ -33,17 +33,17 @@ class StateTest extends TestCase
            ->seeStatusCode(200)
            ->seeJson();
    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_get_a_single_state() {
-//        $state = factory(State::class)->create();
-//
-//        $this->get('state/' . $state->id, ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
-//            ->seeJson();
-//    }
+
+   /**
+    * @test
+    */
+   public function test_if_we_can_get_a_single_state() {
+       $state = factory(State::class)->create();
+
+       $this->get('state/' . $state->id, ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
 //
 //    /**
 //     * @test

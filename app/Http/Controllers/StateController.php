@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\State;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Validator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Class StateController
@@ -102,9 +103,17 @@ StateController extends ApiController
      * )
      */
     public function show($id) {
-        $state = State::findOrFail($id);
 
-        return response()->json(['state' => $state]);
+
+        try {
+            $state = State::findOrFail($id);
+
+            return response()->json(['status' => 'success', 'state' => $state]);
+        }
+
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No states found']);
+        }
     }
 
     /**
