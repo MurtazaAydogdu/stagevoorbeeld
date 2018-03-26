@@ -223,14 +223,22 @@ StateController extends ApiController
             'description' => 'required'
         ]);
 
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->name = $request->input('name');
-        $state->description = $request->input('description');
-        $state->update();
+            $state->name = $request->input('name');
+            $state->description = $request->input('description');
+            $check = $state->update();
 
-        return response()->json(['state' => $state]);
+            if ($check) {
+                return response()->json(['status' => 'success', 'messages' => 'State has been updated', 'state' => $state]);
+            }
+        }
 
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
+        }
     }
 
     /**
