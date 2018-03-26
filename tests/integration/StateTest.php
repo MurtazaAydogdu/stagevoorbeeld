@@ -24,37 +24,15 @@ class StateTest extends TestCase
             ->seeJson();
     }
 
-//    /**
-//     * @test
-//     */
-//    public function test_if_the_validate_returns_an_error_when_sending_name() {
-//
-//        $state = ['name' => 'Open'];
-//
-//        $this->post('state', $state, ['HTTP_Authorization' => $this->token] )
-//            ->seeStatusCode(422);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_the_validate_returns_an_error_when_sending_description() {
-//
-//        $state = ['description' => 'The transaction is paid'];
-//
-//        $this->post('state', $state, ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(422);
-//    }
-//
-//    /**
-//     * @test
-//     */
-//    public function test_if_we_can_get_all_states(){
-//
-//        $this->get('states', ['HTTP_Authorization' => $this->token])
-//            ->seeStatusCode(200)
-//            ->seeJson();
-//    }
+   /**
+    * @test
+    */
+   public function test_if_we_can_get_all_states(){
+
+       $this->get('states', ['HTTP_Authorization' => $this->token])
+           ->seeStatusCode(200)
+           ->seeJson();
+   }
 //
 //    /**
 //     * @test
