@@ -40,17 +40,16 @@ class AuthServiceProvider extends ServiceProvider
 
                 //setup the config file
                 $config = new \AuthSDK\Config();
-                $config->setBaseUrl('https://kaasbaas.localtunnel.me');
                 $config->setOrigin('digitalefactuur');
                 //give guzzle client and config file to tokenpai when creating it
-                $tokenPair = new \AuthSDK\TokenPair(new \GuzzleHttp\Client(), $config);
+                $tokenService = new \AuthSDK\TokenService($config);
 
                 $key = "-----BEGIN PUBLIC KEY-----
 MFswDQYJKoZIhvcNAQEBBQADSgAwRwJAdXf35bq5zxYad+GZBi2UVK3GZg3l+RE+
 +ICZ8pgUFpCD6PB8NlyIhmhyEoSDeWNDOw6g/MFdawcdzvbFK7dTMwIDAQAB
 -----END PUBLIC KEY-----";
 
-                if ($tokenPair->verifyAccessToken($header, $key)) {
+                if ($tokenService->verifyAccessToken($header, $key)) {
                     return true;
                 }
                 return null;

@@ -13,9 +13,7 @@ use App\TransactionIn;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Mollie_API_Client;
-use Mollie_API_Exception;
-require_once dirname(__FILE__) . "/../../../vendor/mollie/mollie-api-php/src/Mollie/API/Autoloader.php";
+
 
 /**
  * Class TransactionInController
@@ -67,15 +65,8 @@ class TransactionInController extends ApiController
     private $mollie;
 
     public function __construct(){
-        $this->middleware('auth', ['except' => ['checkStates']]);
-        $this->setNewMollieApiClient();
+        $this->middleware('auth');
     }
-
-    private function setNewMollieApiClient() {
-        $this->mollie = new Mollie_API_Client;
-        $this->mollie->setApiKey(env('MOLLIE_TEST_API_KEY'));
-    }
-
 
     /**
      * Display a listing of the resource.
@@ -101,13 +92,13 @@ class TransactionInController extends ApiController
      */
     public function index()
     {
-        try {
-            $payments = $this->mollie->payments->all();
+        $transaction = TransactionIn::all();
 
-            return response()->json($payments);
-        } catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        if ($transaction) {
+            return response()->json(['status' => 'success', 'transaction' => $transaction]);
         }
+        return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
+
     }
 
     /**
@@ -141,45 +132,14 @@ class TransactionInController extends ApiController
     public function show($id)
     {
         try {
-            $payment = $this->mollie->payments->get($id);
+            $transaction = TransactionIn::findOrFail($id);
 
-            if ($payment) {
-                return response()->json($payment);
-            }
-        } catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
-        }
-    }
-
-    public function checkStates()
-    {
-        try {
-            $payments = $this->mollie->payments->all();
-
-            foreach ($payments as $payment) {
-                $paymentCreatedDate = new \DateTime($payment->createdDatetime);
-                $stripPaymentDate = $paymentCreatedDate->format('Y-m-d');
-                $today = date('Y-m-d');
-
-                if ($today == $stripPaymentDate) {
-
-                    $state = State::where('name', '=', $payment->status)->get();
-
-                    if ($state) {
-                        $transaction = DB::table('transaction_ins')
-                            ->where('payment_id', $payment->id)
-                            ->update(['state_id' => $state[0]->id]);
-
-                        if ($transaction) {
-                            return response()->json(['status' => 'success', 'message' => 'Transaction state has been changed']);
-                        }
-                        return response()->json(['status' => 'failed', 'message' => 'Transaction state has not been changed']);
-                    }
-                }
+            if ($transaction) {
+                return response()->json(['status' => 'success', 'transaction' => $transaction]);
             }
         }
-        catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
         }
     }
 
@@ -237,34 +197,20 @@ class TransactionInController extends ApiController
      */
     public function store(Request $request)
     {
-        try {
-            $payment = $this->mollie->payments->create(array(
-                "amount" => $request->input('amount'),
-                "description" => $request->input('description'),
-                "redirectUrl" => env('RE_DIRECT_URL'),
-                "webhookUrl" => env('WEBHOOK_URL'),
-            ));
+        $this->validate($request, [
+            'account_id' => 'required',
+            'state_id' => 'required',
+            'payment_id' => 'required',
+            'amount' => 'required',
+            'description' => 'required',
+            'date' => 'required',
+            'origin' => 'required',
+        ]);
 
-            if ($payment) {
-                $check = $this->saveToDatabase($request, $payment->id);
-                if ($check) {
-                    return response()->json(['status' => 'success', 'message' => 'New transaction has been saved into the database']);
-                }
-                return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
-
-            }
-        }
-        catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
-        }
-    }
-
-    private function saveToDatabase($request, $id)
-    {
         $transaction = new TransactionIn();
         $transaction->account_id = $request->input('account_id');
         $transaction->state_id = $request->input('state_id');
-        $transaction->payment_id = $id;
+        $transaction->payment_id = 1;
         $transaction->amount = $request->input('amount');
         $transaction->description = $request->input('description');
         $transaction->date = date('Y-m-d');
