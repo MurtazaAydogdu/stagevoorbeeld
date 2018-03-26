@@ -148,13 +148,16 @@ StateController extends ApiController
             'description' => 'required'
         ]);
 
-
         $state = new State();
         $state->name = $request->input('name');
         $state->description = $request->input('description');
-        $state->save();
+        $check = $state->save();
 
-        return response()->json('State has been created');
+        if ($check) {
+            return response()->json(['status' => 'success', 'message' => 'New transaction has been saved into the database']);
+        }
+        return response()->json(['status' => 'failed', 'message' => 'Error state has not been saved into the database']);
+       
     }
 
     /**
