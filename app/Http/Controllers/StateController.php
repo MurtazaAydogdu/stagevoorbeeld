@@ -285,4 +285,16 @@ StateController extends ApiController
         }
 
     }
+
+    public function restore($id) {
+
+        try {
+            State::withTrashed()->findOrFail($id)->restore();
+        }
+        catch(ModelNotFoundException $e) { 
+            return response()->json(['status' => 'failed', 'message' => 'State not found']);
+        }
+        return response()->json(['status' => 'success','State has been restored']);
+
+    }
 }
