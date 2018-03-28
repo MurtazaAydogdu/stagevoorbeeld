@@ -92,7 +92,7 @@ class TransactionInController extends ApiController
      */
     public function index()
     {
-        $transaction = TransactionIn::all();
+        $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
 
         if ($transaction) {
             return response()->json(['status' => 'success', 'transaction' => $transaction]);

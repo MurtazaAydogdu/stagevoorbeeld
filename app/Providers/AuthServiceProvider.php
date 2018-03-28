@@ -49,7 +49,8 @@ MFswDQYJKoZIhvcNAQEBBQADSgAwRwJAdXf35bq5zxYad+GZBi2UVK3GZg3l+RE+
 +ICZ8pgUFpCD6PB8NlyIhmhyEoSDeWNDOw6g/MFdawcdzvbFK7dTMwIDAQAB
 -----END PUBLIC KEY-----";
 
-                if ($tokenService->verifyAccessToken($header, $key)) {
+                if ($token = $tokenService->verifyAccessToken($header, $key)) {
+                    define("ORIGIN_NAME", $token['aud'][0]);
                     return true;
                 }
                 return null;
