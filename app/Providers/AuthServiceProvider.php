@@ -44,13 +44,12 @@ class AuthServiceProvider extends ServiceProvider
                 //give guzzle client and config file to tokenpai when creating it
                 $tokenService = new \AuthSDK\TokenService($config);
 
-                $key = "-----BEGIN PUBLIC KEY-----
-MFswDQYJKoZIhvcNAQEBBQADSgAwRwJAdXf35bq5zxYad+GZBi2UVK3GZg3l+RE+
-+ICZ8pgUFpCD6PB8NlyIhmhyEoSDeWNDOw6g/MFdawcdzvbFK7dTMwIDAQAB
------END PUBLIC KEY-----";
-
-                if ($token = $tokenService->verifyAccessToken($header, $key)) {
+            
+                if ($token = $tokenService->verifyAccessToken($header, str_replace('\\n', "\n", env('PUBLIC_KEY')))) {
+                    //Use for dev only
                     define("ORIGIN_NAME", $token['aud'][0]);
+
+                    // define("ORIGIN_NAME", $token['origin']);
                     return true;
                 }
                 return null;
