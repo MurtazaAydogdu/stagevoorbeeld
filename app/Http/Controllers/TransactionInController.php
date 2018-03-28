@@ -94,9 +94,7 @@ class TransactionInController extends ApiController
     {
         $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
 
-        if ($transaction != null && empty(json_decode($transaction))) {
-
-            
+        if ($transaction != null && !empty(json_decode($transaction))) {
             return response()->json(['status' => 'success', 'transaction' => $transaction]);
         }
         return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
