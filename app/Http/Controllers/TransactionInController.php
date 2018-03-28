@@ -132,9 +132,9 @@ class TransactionInController extends ApiController
     public function show($id)
     {
         try {
-            $transaction = TransactionIn::findOrFail($id);
+            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
-            if ($transaction) {
+            if ($transaction != null && !empty(json_decode($transaction))) {
                 return response()->json(['status' => 'success', 'transaction' => $transaction]);
             }
         }
