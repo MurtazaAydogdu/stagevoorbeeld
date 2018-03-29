@@ -67,7 +67,7 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function tet_if_We_can_delete_a_single_transaction_by_id() {
+    public function test_if_we_can_delete_a_single_transaction_by_id() {
         
         $transaction = factory(TransactionIn::class)->create();
 

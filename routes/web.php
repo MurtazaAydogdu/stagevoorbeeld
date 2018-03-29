@@ -23,6 +23,7 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->get('state/{id}', 'StateController@show');
     $router->patch('state/edit/{id}', 'StateController@update');
     $router->delete('state/delete/{id}', 'StateController@delete');
+    $router->delete('state/restore/{id}', 'StateController@restore'); 
 
     /**
      * This is the transaction-in route

@@ -63,35 +63,50 @@
                         "description": "Unauthorized action."
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/state/create": {
+            "post": {
                 "tags": [
                     "state"
                 ],
                 "summary": "Display a listing of the resource.",
-                "description": "Returns state overview.",
-                "operationId": "api.state.delete",
+                "description": "Returns states overview.",
+                "operationId": "api.state.store",
                 "produces": [
                     "application/json"
                 ],
                 "parameters": [
                     {
-                        "name": "id",
-                        "in": "path",
-                        "description": "State id to delete",
+                        "name": "body",
+                        "in": "body",
                         "required": true,
-                        "type": "integer"
+                        "schema": {
+                            "properties": {
+                                "name": {
+                                    "description": "Display a listing of the resource.",
+                                    "type": "string",
+                                    "maximum": 64
+                                },
+                                "description": {
+                                    "description": "Display a listing of the resource.",
+                                    "type": "string"
+                                }
+                            }
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "State overview."
+                        "description": "States overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
                     }
                 }
-            },
+            }
+        },
+        "/state/edit/{id}": {
             "patch": {
                 "tags": [
                     "state"
@@ -140,40 +155,59 @@
                 }
             }
         },
-        "/state": {
-            "post": {
+        "/state/delete/{id}": {
+            "delete": {
                 "tags": [
                     "state"
                 ],
                 "summary": "Display a listing of the resource.",
-                "description": "Returns states overview.",
-                "operationId": "api.state.store",
+                "description": "Returns state overview.",
+                "operationId": "api.state.delete",
                 "produces": [
                     "application/json"
                 ],
                 "parameters": [
                     {
-                        "name": "body",
-                        "in": "body",
+                        "name": "id",
+                        "in": "path",
+                        "description": "State id to delete",
                         "required": true,
-                        "schema": {
-                            "properties": {
-                                "name": {
-                                    "description": "Display a listing of the resource.",
-                                    "type": "string",
-                                    "maximum": 64
-                                },
-                                "description": {
-                                    "description": "Display a listing of the resource.",
-                                    "type": "string"
-                                }
-                            }
-                        }
+                        "type": "integer"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "States overview."
+                        "description": "State overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/state/restore/{id}": {
+            "delete": {
+                "tags": [
+                    "state"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns state overview.",
+                "operationId": "api.state.restore",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "State id to restore",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "State overview."
                     },
                     "401": {
                         "description": "Unauthorized action."

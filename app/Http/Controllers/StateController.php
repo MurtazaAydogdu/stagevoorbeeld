@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\State;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Validator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Class StateController
@@ -67,7 +68,10 @@ StateController extends ApiController
     public function index(){
         $states = State::all();
 
-        return response()->json(['states' => $states]);
+        if ($states) {
+            return response()->json(['status' => 'success', 'states' => $states]);
+        }
+        return response()->json(['status' => 'success', 'message' => 'Error no states found']);
     }
 
     /**
@@ -99,9 +103,17 @@ StateController extends ApiController
      * )
      */
     public function show($id) {
-        $state = State::findOrFail($id);
 
-        return response()->json(['state' => $state]);
+
+        try {
+            $state = State::findOrFail($id);
+
+            return response()->json(['status' => 'success', 'state' => $state]);
+        }
+
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No states found']);
+        }
     }
 
     /**
@@ -110,7 +122,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\POST(
-     *     path="/state",
+     *     path="/state/create",
      *     description="Returns states overview.",
      *     operationId="api.state.store",
      *     produces={"application/json"},
@@ -148,13 +160,16 @@ StateController extends ApiController
             'description' => 'required'
         ]);
 
-
         $state = new State();
         $state->name = $request->input('name');
         $state->description = $request->input('description');
-        $state->save();
+        $check = $state->save();
 
-        return response()->json('State has been created');
+        if ($check) {
+            return response()->json(['status' => 'success', 'message' => 'New transaction has been saved into the database']);
+        }
+        return response()->json(['status' => 'failed', 'message' => 'Error state has not been saved into the database']);
+       
     }
 
     /**
@@ -163,7 +178,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\PATCH(
-     *     path="/state/{id}",
+     *     path="/state/edit/{id}",
      *     description="Returns state object that has been updated.",
      *     operationId="api.states.update",
      *     produces={"application/json"},
@@ -208,14 +223,22 @@ StateController extends ApiController
             'description' => 'required'
         ]);
 
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->name = $request->input('name');
-        $state->description = $request->input('description');
-        $state->update();
+            $state->name = $request->input('name');
+            $state->description = $request->input('description');
+            $check = $state->update();
 
-        return response()->json(['state' => $state]);
+            if ($check) {
+                return response()->json(['status' => 'success', 'messages' => 'State has been updated', 'state' => $state]);
+            }
+        }
 
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
+        }
     }
 
     /**
@@ -224,7 +247,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\DELETE(
-     *     path="/state/{id}",
+     *     path="/state/delete/{id}",
      *     description="Returns state overview.",
      *     operationId="api.state.delete",
      *     produces={"application/json"},
@@ -247,10 +270,59 @@ StateController extends ApiController
      * )
      */
     public function delete($id){
-        $state = State::findOrFail($id);
+        
+        try {
+            $state = State::findOrFail($id);
 
-        $state->delete();
+            $check = $state->delete();
 
-        return response()->json('State has been deleted');
+            if ($check) {
+                return response()->json('State has been deleted');
+            }
+        }
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Error couldnot delete the state ']);
+        }
+
+    }
+
+     /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @SWG\DELETE(
+     *     path="/state/restore/{id}",
+     *     description="Returns state overview.",
+     *     operationId="api.state.restore",
+     *     produces={"application/json"},
+     *     tags={"state"},
+     *     @SWG\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         type="integer",
+     *         description="State id to restore"
+     *     ),
+     *     @SWG\Response(
+     *         response=200,
+     *         description="State overview."
+     *     ),
+     *     @SWG\Response(
+     *         response=401,
+     *         description="Unauthorized action.",
+     *     )
+     * )
+     */
+    public function restore($id) {
+
+        try {
+            State::withTrashed()->findOrFail($id)->restore();
+        }
+        catch(ModelNotFoundException $e) { 
+            return response()->json(['status' => 'failed', 'message' => 'State not found']);
+        }
+        return response()->json(['status' => 'success','State has been restored']);
+
     }
 }
