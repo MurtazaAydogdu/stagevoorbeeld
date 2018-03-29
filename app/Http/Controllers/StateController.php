@@ -71,7 +71,7 @@ StateController extends ApiController
         if ($states) {
             return response()->json(['status' => 'success', 'states' => $states]);
         }
-        return response()->json(['status' => 'success', 'messages' => 'Error no states found']);
+        return response()->json(['status' => 'success', 'message' => 'Error no states found']);
     }
 
     /**
@@ -122,7 +122,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\POST(
-     *     path="/state",
+     *     path="/state/create",
      *     description="Returns states overview.",
      *     operationId="api.state.store",
      *     produces={"application/json"},
@@ -178,7 +178,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\PATCH(
-     *     path="/state/{id}",
+     *     path="/state/edit/{id}",
      *     description="Returns state object that has been updated.",
      *     operationId="api.states.update",
      *     produces={"application/json"},
@@ -247,7 +247,7 @@ StateController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\DELETE(
-     *     path="/state/{id}",
+     *     path="/state/delete/{id}",
      *     description="Returns state overview.",
      *     operationId="api.state.delete",
      *     produces={"application/json"},
@@ -286,6 +286,34 @@ StateController extends ApiController
 
     }
 
+     /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @SWG\DELETE(
+     *     path="/state/restore/{id}",
+     *     description="Returns state overview.",
+     *     operationId="api.state.restore",
+     *     produces={"application/json"},
+     *     tags={"state"},
+     *     @SWG\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         type="integer",
+     *         description="State id to restore"
+     *     ),
+     *     @SWG\Response(
+     *         response=200,
+     *         description="State overview."
+     *     ),
+     *     @SWG\Response(
+     *         response=401,
+     *         description="Unauthorized action.",
+     *     )
+     * )
+     */
     public function restore($id) {
 
         try {

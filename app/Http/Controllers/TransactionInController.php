@@ -92,9 +92,9 @@ class TransactionInController extends ApiController
      */
     public function index()
     {
-        $transaction = TransactionIn::all();
+        $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
 
-        if ($transaction) {
+        if ($transaction != null && !empty(json_decode($transaction))) {
             return response()->json(['status' => 'success', 'transaction' => $transaction]);
         }
         return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
@@ -132,9 +132,9 @@ class TransactionInController extends ApiController
     public function show($id)
     {
         try {
-            $transaction = TransactionIn::findOrFail($id);
+            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
-            if ($transaction) {
+            if ($transaction != null && !empty(json_decode($transaction))) {
                 return response()->json(['status' => 'success', 'transaction' => $transaction]);
             }
         }
@@ -285,9 +285,9 @@ class TransactionInController extends ApiController
      */
     public function update(Request $request, $id) {
         try {
-            $transaction = TransactionIn::findOrFail($id);
+            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
-            if ($transaction) {
+            if ($transaction && $this->validateTransactionInRequest($request)) {
                 $transaction->account_id = $request->input('account_id');
                 $transaction->state_id = $request->input('state_id');
                 $transaction->payment_id = $request->input('payment_id');
@@ -299,6 +299,7 @@ class TransactionInController extends ApiController
                 if ($save){
                     return response()->json(['status' => 'success', 'transaction' => $transaction]);
                 }
+                return response()->json(['status'=> 'failed', 'message' => 'Unable to update your changes']);
             }
         }
         catch (ModelNotFoundException $e) {
@@ -356,5 +357,17 @@ class TransactionInController extends ApiController
 
         }
         return response()->json(['status' => 'success','Transaction has been restored']);
+    }
+
+    private function validateTransactionInRequest($request) {
+        return $this->validate($request, [
+            'account_id' => 'required',
+            'state_id' => 'required',
+            'payment_id' => 'required',
+            'amount' => 'required',
+            'description' => 'required',
+            'date' => 'required',
+            'origin' => 'required',
+        ]);
     }
 }
