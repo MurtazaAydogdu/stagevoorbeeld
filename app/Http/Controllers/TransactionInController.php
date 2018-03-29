@@ -299,7 +299,7 @@ class TransactionInController extends ApiController
                 if ($save){
                     return response()->json(['status' => 'success', 'transaction' => $transaction]);
                 }
-                return response()->json(['status'=> 'failed', 'message' => 'An unexpected error has occured. Changes to your data cannot be saved']);
+                return response()->json(['status'=> 'failed', 'message' => 'Unable to update your changes']);
             }
         }
         catch (ModelNotFoundException $e) {
