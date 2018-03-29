@@ -8,7 +8,7 @@
         },
         "version": "1.0"
     },
-    "host": "transaction.test",
+    "host": "localhost:8888/transaction_api",
     "basePath": "",
     "schemes": [
         "http"
@@ -215,7 +215,7 @@
                 }
             }
         },
-        "/transaction-in": {
+        "/transaction/in": {
             "get": {
                 "tags": [
                     "transaction_in"
@@ -234,7 +234,39 @@
                         "description": "Unauthorized action."
                     }
                 }
-            },
+            }
+        },
+        "/transaction/in/{id}": {
+            "get": {
+                "tags": [
+                    "transaction_in"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns transactions object.",
+                "operationId": "api.transaction_in.show",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of transaction_in to return",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction-In-In overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/transaction/in/store": {
             "post": {
                 "tags": [
                     "transaction_in"
@@ -290,63 +322,7 @@
                 }
             }
         },
-        "/transaction-in/{id}": {
-            "get": {
-                "tags": [
-                    "transaction_in"
-                ],
-                "summary": "Display a listing of the resource.",
-                "description": "Returns transactions object.",
-                "operationId": "api.transaction_in.show",
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of transaction_in to return",
-                        "required": true,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transaction-In-In overview."
-                    },
-                    "401": {
-                        "description": "Unauthorized action."
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "transaction_in"
-                ],
-                "summary": "Display a listing of the resource.",
-                "description": "Returns transaction overview.",
-                "operationId": "api.transaction_in.delete",
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "State id to delete",
-                        "required": true,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "State overview."
-                    },
-                    "401": {
-                        "description": "Unauthorized action."
-                    }
-                }
-            },
+        "/transaction/in/edit/{id}": {
             "patch": {
                 "tags": [
                     "transaction_in"
@@ -403,6 +379,66 @@
                 "responses": {
                     "200": {
                         "description": "Transaction-In-In overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/transaction/in/delete/{id}": {
+            "delete": {
+                "tags": [
+                    "transaction_in"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns transaction overview.",
+                "operationId": "api.transaction_in.delete",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "State id to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "State overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/transaction/in/restore/{id}": {
+            "delete": {
+                "tags": [
+                    "transaction_in"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns transaction overview.",
+                "operationId": "api.transaction_in.restore",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Transaction id to restore",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "State overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
