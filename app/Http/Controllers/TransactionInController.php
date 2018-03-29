@@ -338,13 +338,17 @@ class TransactionInController extends ApiController
     public function delete($id)
     {
         try {
-            $transaction = TransactionIn::findOrFail($id);
-            $transaction->delete();
+            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $deleted = $transaction->delete();
+
+            if ($deleted) {
+                return response()->json(['status' => 'success', 'message' => 'Transaction has been deleted']);
+            }
+            return response()->json(['status' => 'failed', 'messages'=> 'Unable to delete your transaction']);
         }
         catch (ModelNotFoundException $e) {
             return response()->json(['status' => 'failed', 'message' => 'Transaction not found']);
         }
-        return response()->json(['status' => 'success', 'message' => 'Transaction has been deleted']);
     }
 
     public function undoDelete($id)
