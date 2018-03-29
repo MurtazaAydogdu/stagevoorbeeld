@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @SWG\Swagger(
  *     basePath="",
- *     host="transaction.test",
+ *     host="localhost:8888/transaction_api",
  *     schemes={"http"},
  *     @SWG\Info(
  *         version="1.0",
@@ -74,7 +74,7 @@ class TransactionInController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\Get(
-     *     path="/transaction-in",
+     *     path="/transaction/in",
      *     summary="Array of transaction_in",
      *     description="Returns transactions array.",
      *     operationId="api.transaction_in.index",
@@ -107,7 +107,7 @@ class TransactionInController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\Get(
-     *     path="/transaction-in/{id}",
+     *     path="/transaction/in/{id}",
      *     description="Returns transactions object.",
      *     operationId="api.transaction_in.show",
      *     produces={"application/json"},
@@ -149,7 +149,7 @@ class TransactionInController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\POST(
-     *     path="/transaction-in",
+     *     path="/transaction/in/store",
      *     description="Returns transactions overview.",
      *     operationId="api.transaction_in.store",
      *     produces={"application/json"},
@@ -229,7 +229,7 @@ class TransactionInController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\PATCH(
-     *     path="/transaction-in/{id}",
+     *     path="/transaction/in/edit/{id}",
      *     description="Returns transaction-in object that has been updated.",
      *     operationId="api.transaction_in.update",
      *     produces={"application/json"},
@@ -312,7 +312,7 @@ class TransactionInController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\DELETE(
-     *     path="/transaction-in/{id}",
+     *     path="/transaction/in/delete/{id}",
      *     description="Returns transaction overview.",
      *     operationId="api.transaction_in.delete",
      *     produces={"application/json"},
@@ -346,15 +346,46 @@ class TransactionInController extends ApiController
         return response()->json(['status' => 'success', 'message' => 'Transaction has been deleted']);
     }
 
-    public function undoDelete($id)
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @SWG\DELETE(
+     *     path="/transaction/in/restore/{id}",
+     *     description="Returns transaction overview.",
+     *     operationId="api.transaction_in.restore",
+     *     produces={"application/json"},
+     *     tags={"transaction_in"},
+     *     @SWG\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         type="integer",
+     *         description="Transaction id to restore"
+     *     ),
+     *     @SWG\Response(
+     *         response=200,
+     *         description="State overview."
+     *     ),
+     *     @SWG\Response(
+     *         response=401,
+     *         description="Unauthorized action.",
+     *     )
+     * )
+     */
+    public function restore($id)
     {
         try {
-            TransactionIn::withTrashed()->findOrFail($id)->restore();
+            $restored = TransactionIn::withTrashed()->findOrFail($id)->restore();
+
+            if ($restored) {
+                return response()->json(['status' => 'success','Transaction has been restored']);
+            }                
+            return response()->json(['status' => 'failed','Unable to restore the transaction']);
         }
         catch(ModelNotFoundException $e) {
             return response()->json(['status' => 'failed', 'message' => 'Transaction not found']);
-
         }
-        return response()->json(['status' => 'success','Transaction has been restored']);
     }
 }

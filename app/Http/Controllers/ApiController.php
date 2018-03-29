@@ -10,7 +10,7 @@ namespace App\Http\Controllers;
  *
  * @SWG\Swagger(
  *     basePath="",
- *     host="transaction.test",
+ *     host="localhost:8888/transaction_api",
  *     schemes={"http"},
  *     @SWG\Info(
  *         version="1.0",

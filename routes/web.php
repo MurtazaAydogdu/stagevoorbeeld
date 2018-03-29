@@ -32,7 +32,7 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->post('transaction/in/create', 'TransactionInController@store');
     $router->patch('transaction/in/edit/{id}', 'TransactionInController@update');
     $router->delete('transaction/in/delete/{id}', 'TransactionInController@delete');
-    $router->delete('transaction/in/undo/{id}', 'TransactionInController@undoDelete');
+    $router->delete('transaction/in/restore/{id}', 'TransactionInController@restore');
 
     /**
      * This is the transaction-out route
