@@ -45,4 +45,4 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->delete('transaction/out/delete/{id}', 'TransactionOutController@delete');
 });
 
-$router->get('transaction-in/check/states', 'TransactionInController@checkStates');
+$router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');
