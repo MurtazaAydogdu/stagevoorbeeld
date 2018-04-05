@@ -60,6 +60,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  */
 class TransactionOutController extends ApiController
 {
+    public function __construct(){
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -259,7 +263,7 @@ class TransactionOutController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\DELETE(
-     *     path="/transaction-out/{id}",
+     *     path="/transaction/out/delete/{id}",
      *     description="Returns transaction overview.",
      *     operationId="api.transaction_out.delete",
      *     produces={"application/json"},
@@ -282,10 +286,17 @@ class TransactionOutController extends ApiController
      * )
      */
     public function delete($id){
-        $transaction = TransactionOut::findOrFail($id);
+        try {
+            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
 
-        $transaction->delete();
+            $deleted = $transaction->delete();
 
-        return response()->json('Transaction has been deleted');
+            if ($deleted) {
+                return response()->json(['status'=> 'success', 'message' => 'Transaction has been deleted']);
+            }
+        }
+        catch(ModelNotFoundException $e) {
+            return response()->json(['status'=> 'failed', 'message' => 'No transaction found']);
+        }
     }
 }
