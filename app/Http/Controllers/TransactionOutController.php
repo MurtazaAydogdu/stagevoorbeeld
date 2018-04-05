@@ -81,9 +81,12 @@ class TransactionOutController extends ApiController
      * )
      */
     public function index(){
-        $transaction = TransactionOut::all();
+        $transaction = TransactionOut::where('origin', ORIGIN_NAME)->get();
 
-        return response()->json(['transaction' => $transaction]);
+        if ($transaction) {
+            return response()->json(['status'=> 'success', 'transaction' => $transaction]);
+        }
+        return response()->json(['status'=> 'success','message' => 'No transactions found']);
     }
 
     /**
