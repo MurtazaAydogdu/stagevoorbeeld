@@ -205,7 +205,7 @@ class TransactionInController extends ApiController
             'payment_id' => 'required',
             'amount' => 'required',
             'description' => 'required',
-            'date' => 'required',
+            'date' => 'required|strtotime',
             'origin' => 'required',
         ]);
 
@@ -403,7 +403,7 @@ class TransactionInController extends ApiController
             'payment_id' => 'required|integer',
             'amount' => 'required',
             'description' => 'required|string',
-            'date' => 'required',
+            'date' => 'required|strtotime',
             'origin' => 'required|string',
         ]);
     }
@@ -414,7 +414,7 @@ class TransactionInController extends ApiController
         try {
             $payment = $this->getPaymentFromMollieOnId($request->id);        
         
-            if ($payment->isPaid() == TRUE) {
+            if ($payment->isPaid()) {
                 $transaction = new TransactionIn();
                 $transaction->account_id = $_GET['account_id'];
                 $transaction->payment_id = $payment->id;
@@ -428,6 +428,9 @@ class TransactionInController extends ApiController
         }        
         catch (Mollie_API_Exception $e) {
             return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        }
+        catch (\Exception $e) {
+            return response()->json(['status' => 'failed', 'message' => 'Could not save the request']);
         }
     }
 
