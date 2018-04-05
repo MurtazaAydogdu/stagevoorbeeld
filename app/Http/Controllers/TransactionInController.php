@@ -13,6 +13,8 @@ use App\TransactionIn;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Mollie_API_Client;
+use Mollie_API_Exception;
 
 
 /**
@@ -65,7 +67,7 @@ class TransactionInController extends ApiController
     private $mollie;
 
     public function __construct(){
-        $this->middleware('auth');
+        $this->middleware('auth',['except' => ['createMolliePayment']]);
     }
 
     /**
@@ -396,13 +398,58 @@ class TransactionInController extends ApiController
 
     private function validateTransactionInRequest($request) {
         return $this->validate($request, [
-            'account_id' => 'required',
-            'state_id' => 'required',
-            'payment_id' => 'required',
+            'account_id' => 'required|integer',
+            'state_id' => 'required|integer',
+            'payment_id' => 'required|integer',
             'amount' => 'required',
-            'description' => 'required',
+            'description' => 'required|string',
             'date' => 'required',
-            'origin' => 'required',
+            'origin' => 'required|string',
         ]);
+    }
+
+    public function createMolliePayment(Request $request) {
+        $this->setNewMollieApiClient($_GET['origin']);
+               
+        try {
+            $payment = $this->getPaymentFromMollieOnId($request->id);        
+        
+            if ($payment->isPaid() == TRUE) {
+                $transaction = new TransactionIn();
+                $transaction->account_id = $_GET['account_id'];
+                $transaction->payment_id = $payment->id;
+                $transaction->state_id = $this->findStateIdBasedOnName($payment->status)[0]->id ;
+                $transaction->amount = $payment->amount;
+                $transaction->description = $payment->description;
+                $transaction->date = $payment->paidDatetime;
+                $transaction->origin = $_GET['origin'];
+                $transaction->save();
+            }
+        }        
+        catch (Mollie_API_Exception $e) {
+            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        }
+    }
+
+    private function setNewMollieApiClient($origin) {
+        $this->mollie = new Mollie_API_Client;
+        $originSpecificApiKey = strtoupper($origin) . env('MOLLIE');
+        $this->mollie->setApiKey(env($originSpecificApiKey));
+    }
+
+    private function getPaymentFromMollieOnId($id) {
+        try {
+            $payment = $this->mollie->payments->get($id);
+
+            if ($payment) {
+                return $payment;
+            }
+        } catch (Mollie_API_Exception $e) {
+            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+        }
+    }
+        
+    private function findStateIdBasedOnName($status) {    
+        return State::where('name', '=', $status)->get();
     }
 }
