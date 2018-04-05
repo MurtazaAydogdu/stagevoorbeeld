@@ -10,6 +10,8 @@ namespace App\Http\Controllers;
 
 use App\TransactionOut;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 
 /**
  * Class TransactionOutController
@@ -64,7 +66,7 @@ class TransactionOutController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\Get(
-     *     path="/transaction-out",
+     *     path="/transaction/out",
      *     summary="Array of transaction_out",
      *     description="Returns transactions array.",
      *     operationId="api.transaction_out.index",
@@ -95,7 +97,7 @@ class TransactionOutController extends ApiController
      * @return \Illuminate\Http\JsonResponse
      *
      * @SWG\Get(
-     *     path="/transaction-out/{id}",
+     *     path="/transaction/out/{id}",
      *     description="Returns transactions object.",
      *     operationId="api.transaction_out.show",
      *     produces={"application/json"},
@@ -118,9 +120,17 @@ class TransactionOutController extends ApiController
      * )
      */
     public function show($id){
-        $transaction = TransactionOut::findOrFail($id);
 
-        return response()->json(['transaction' => $transaction]);
+        try {
+            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
+    
+            if ($transaction) {
+                return response()->json(['status'=> 'success', 'transaction' => $transaction]);
+            }
+        }
+        catch (ModelNotFoundException $e) {
+            return response()->json(['status'=>'failed', 'message'=>'No transaction found']);
+        }
     }
 
     /**
