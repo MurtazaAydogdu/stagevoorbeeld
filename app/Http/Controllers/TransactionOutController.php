@@ -299,4 +299,17 @@ class TransactionOutController extends ApiController
             return response()->json(['status'=> 'failed', 'message' => 'No transaction found']);
         }
     }
+
+    public function restore($id) {
+        try {
+            $restored = TransactionOut::withTrashed()->findOrFail($id)->restore();
+
+            if ($restored) {
+                return response()->json(['status' => 'success', 'message' => 'Transaction has been restored']);
+            }
+        }
+        catch (ModelNotFoundException $e) {
+            return response()->json(['status' => 'failed', 'message' => 'No transaction found']);
+        }
+    }
 }
