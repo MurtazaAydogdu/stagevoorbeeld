@@ -92,7 +92,7 @@ class TransactionOutController extends ApiController
         if ($transaction) {
             return response()->json(['status'=> 'success', 'transaction' => $transaction]);
         }
-        return response()->json(['status'=> 'success','message' => 'No transactions found']);
+        return response()->json(['status'=> 'failed','message' => 'No transactions found']);
     }
 
     /**
