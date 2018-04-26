@@ -37,7 +37,7 @@ function banner() {
 
     if [ -z ${OPS_VERBOSE+x} ]; then
     echo
-    echo "${normal}${bold}Genifer${normal}"
+    echo "${normal}${bold}microservicetransactions${normal}"
     echo ${normal}
     fi
     echo $MESSAGE
