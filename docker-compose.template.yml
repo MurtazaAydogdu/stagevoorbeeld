@@ -1,0 +1,13 @@
+---
+version: '2.1'
+services:
+  example:
+    image: docker-registry.bjoola.nl/auth/nodejs:${BASE_VERSION}
+    ports:
+     - "80:8080"
+    command: bin/start.sh
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "16m"
+        max-file: "8"

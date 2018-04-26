@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Description:
+# one-off convenience command to initialize terminal.
+
+# Usage:
+# $ source setenv
+
+export MACHINE_NAME='microservicetransactions'
+export COMPOSE_PROJECT_NAME=${MACHINE_NAME}
+# make ops_home easily available to other scripts
+export OPS_HOME=$PWD/operations
+source ${OPS_HOME}/utils/echo.sh
+
+
+# shared settings NOT added to git
+if [ -f ./setenv.shared ]; then
+  source ./setenv.shared
+fi
+
+# private settings NOT added to git
+if [ -f ./setenv.${USER} ]; then
+  source ./setenv.${USER}
+fi
+
+if [ -f ./.version ]; then
+  export $(cat ./.version | xargs)
+fi
+
+# add ${HOME}/bin to PATH
+LOCAL_BIN=${HOME}/bin
+case ":$PATH:" in
+  *":$LOCAL_BIN:"*) :;; # already there
+  *) export PATH="$LOCAL_BIN:$PATH";; # or PATH="$PATH:$new_entry"
+esac
+
+# Add any commands from ./node_modules/.bin to PATH
+#NM_PATH=$PWD/node_modules/.bin
+#case ":$PATH:" in
+#  *":$NM_PATH:"*) :;; # already there
+#  *) export PATH="$NM_PATH:$PATH";; # or PATH="$PATH:$new_entry"
+#esac
+
+./bootstrap.sh && \
+eval "$(docker-machine env ${MACHINE_NAME})" || \
+echo_error "running bootstrap.sh"
+
+alias docker-image-tree="docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock nate/dockviz images -t"
