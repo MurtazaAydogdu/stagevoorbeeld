@@ -58,9 +58,9 @@ class ResponseWrapper {
         $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
         $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
-        if($data) {
-            $this->body->data = $data;
-        }
+        // if($data) {
+        //     $this->body->data = $data;
+        // }
         return $this->body;
     }
     private function formatErrorBody($data) {
@@ -68,10 +68,9 @@ class ResponseWrapper {
         $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
         $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
-        
-        if($data['stack']) {
-            $this->body->stack = $data['stack'];
-        }
+
+        unset($data['code']);
+    
         if($data) {
             $this->body->data = $data;
         }
