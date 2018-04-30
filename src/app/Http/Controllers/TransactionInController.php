@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mollie_API_Client;
 use Mollie_API_Exception;
+use App\Http\ResponseWrapper;
+use Illuminate\Support\Facades\Validator;
 
 
 /**
@@ -65,9 +67,11 @@ use Mollie_API_Exception;
 class TransactionInController extends ApiController
 {
     private $mollie;
+    private $responseWrapper;
 
     public function __construct(){
         $this->middleware('auth',['except' => ['createMolliePayment']]);
+        $this->responseWrapper = new ResponseWrapper();
     }
 
     /**
@@ -94,13 +98,17 @@ class TransactionInController extends ApiController
      */
     public function index()
     {
-        $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
+        try {
+            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
 
-        if ($transaction != null && !empty(json_decode($transaction))) {
-            return response()->json(['status' => 'success', 'transaction' => $transaction]);
+            if ($transaction != null && !empty(json_decode($transaction))) {
+                return $this->responseWrapper->ok($transaction);
+            }
+            return $this->responseWrapper->notFound(array('message' => 'The requested transactions has not been found', 'code' => 'ResourceNotFound'));
         }
-        return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
-
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
+        }
     }
 
     /**
@@ -137,11 +145,14 @@ class TransactionInController extends ApiController
             $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
             if ($transaction != null && !empty(json_decode($transaction))) {
-                return response()->json(['status' => 'success', 'transaction' => $transaction]);
+                return $this->responseWrapper->ok($transaction);
             }
         }
         catch(ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
+        }
+        catch(\Exception $e) {
+            return $this->responseWrapper->serverError(array('code'=> 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
@@ -199,7 +210,7 @@ class TransactionInController extends ApiController
      */
     public function store(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'account_id' => 'required',
             'state_id' => 'required',
             'payment_id' => 'required',
@@ -209,21 +220,30 @@ class TransactionInController extends ApiController
             'origin' => 'required',
         ]);
 
-        $transaction = new TransactionIn();
-        $transaction->account_id = $request->input('account_id');
-        $transaction->state_id = $request->input('state_id');
-        $transaction->payment_id = 1;
-        $transaction->amount = $request->input('amount');
-        $transaction->description = $request->input('description');
-        $transaction->date = date('Y-m-d');
-        $transaction->origin = $request->input('origin');
-        $check = $transaction->save();
-
-        if ($check) {
-            return response()->json(['status' => 'success', 'message' => 'New transaction has been saved into the database']);
+        if ($validator->fails()) {
+            return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-        return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
+
+        try {
+            $transaction = new TransactionIn();
+            $transaction->account_id = $request->input('account_id');
+            $transaction->state_id = $request->input('state_id');
+            $transaction->payment_id = 1;
+            $transaction->amount = $request->input('amount');
+            $transaction->description = $request->input('description');
+            $transaction->date = date('Y-m-d');
+            $transaction->origin = $request->input('origin');
+            $check = $transaction->save();
+
+            if ($check) {
+                return $this->responseWrapper->ok($transaction);
+            }
+        }
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
+        }
     }
+
 
     /**
      * Display a listing of the resource.
@@ -289,7 +309,7 @@ class TransactionInController extends ApiController
         try {
             $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
-            if ($transaction && $this->validateTransactionInRequest($request)) {
+            if ($transaction) {
                 $transaction->account_id = $request->input('account_id');
                 $transaction->state_id = $request->input('state_id');
                 $transaction->payment_id = $request->input('payment_id');
@@ -299,13 +319,15 @@ class TransactionInController extends ApiController
                 $save = $transaction->update();
 
                 if ($save){
-                    return response()->json(['status' => 'success', 'transaction' => $transaction]);
+                    return $this->responseWrapper->ok($transaction);
                 }
-                return response()->json(['status'=> 'failed', 'message' => 'Unable to update your changes']);
             }
         }
         catch (ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'No transactions found']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
+        }
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
@@ -344,12 +366,14 @@ class TransactionInController extends ApiController
             $deleted = $transaction->delete();
 
             if ($deleted) {
-                return response()->json(['status' => 'success', 'message' => 'Transaction has been deleted']);
+                return $this->responseWrapper->ok($transaction);
             }
-            return response()->json(['status' => 'failed', 'messages'=> 'Unable to delete your transaction']);
         }
         catch (ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'Transaction not found']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
+        }
+        catch(\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
@@ -387,72 +411,14 @@ class TransactionInController extends ApiController
             $restored = TransactionIn::withTrashed()->findOrFail($id)->restore();
 
             if ($restored) {
-                return response()->json(['status' => 'success','Transaction has been restored']);
+                return $this->responseWrapper->ok($restored);
             }                
-            return response()->json(['status' => 'failed','Unable to restore the transaction']);
         }
         catch(ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'Transaction not found']);
-        }
-    }
-
-    private function validateTransactionInRequest($request) {
-        return $this->validate($request, [
-            'account_id' => 'required|integer',
-            'state_id' => 'required|integer',
-            'payment_id' => 'required|integer',
-            'amount' => 'required',
-            'description' => 'required|string',
-            'date' => 'required|strtotime',
-            'origin' => 'required|string',
-        ]);
-    }
-
-    public function createMolliePayment(Request $request) {
-        $this->setNewMollieApiClient($_GET['origin']);
-               
-        try {
-            $payment = $this->getPaymentFromMollieOnId($request->id);        
-        
-            if ($payment->isPaid()) {
-                $transaction = new TransactionIn();
-                $transaction->account_id = $_GET['account_id'];
-                $transaction->payment_id = $payment->id;
-                $transaction->state_id = $this->findStateIdBasedOnName($payment->status)[0]->id ;
-                $transaction->amount = $payment->amount;
-                $transaction->description = $payment->description;
-                $transaction->date = $payment->paidDatetime;
-                $transaction->origin = $_GET['origin'];
-                $transaction->save();
-            }
-        }        
-        catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch (\Exception $e) {
-            return response()->json(['status' => 'failed', 'message' => 'Could not save the request']);
+            return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
-    }
-
-    private function setNewMollieApiClient($origin) {
-        $this->mollie = new Mollie_API_Client;
-        $originSpecificApiKey = strtoupper($origin) . env('MOLLIE');
-        $this->mollie->setApiKey(env($originSpecificApiKey));
-    }
-
-    private function getPaymentFromMollieOnId($id) {
-        try {
-            $payment = $this->mollie->payments->get($id);
-
-            if ($payment) {
-                return $payment;
-            }
-        } catch (Mollie_API_Exception $e) {
-            return response()->json("API call failed: " . htmlspecialchars($e->getMessage()));
-        }
-    }
-        
-    private function findStateIdBasedOnName($status) {    
-        return State::where('name', '=', $status)->get();
     }
 }

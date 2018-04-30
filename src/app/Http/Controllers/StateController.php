@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 use App\State;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Validator;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Http\ResponseWrapper;
 
 /**
  * Class StateController
@@ -34,13 +35,14 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  *     )
  * )
  */
-class
-StateController extends ApiController
+class StateController extends ApiController
 {
+    private $responseWrapper;
 
     public function __construct()
     {
         $this->middleware('auth');
+        $this->responseWrapper = new ResponseWrapper();
     }
 
     /**
@@ -66,12 +68,18 @@ StateController extends ApiController
      * )
      */
     public function index(){
-        $states = State::all();
 
-        if ($states) {
-            return response()->json(['status' => 'success', 'states' => $states]);
+        try {
+            $states = State::all();
+
+            if ($states) {
+                return $this->responseWrapper->ok($states);
+            }
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
-        return response()->json(['status' => 'success', 'message' => 'Error no states found']);
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
+        }
     }
 
     /**
@@ -104,15 +112,18 @@ StateController extends ApiController
      */
     public function show($id) {
 
-
         try {
             $state = State::findOrFail($id);
-
-            return response()->json(['status' => 'success', 'state' => $state]);
+            
+            if ($state) {
+                return $this->responseWrapper->ok($state);
+            }
         }
-
         catch(ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'No states found']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
+        }
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
@@ -155,21 +166,28 @@ StateController extends ApiController
      */
     public function store(Request $request){
 
-        $this->validate($request, [
-            'name' => 'required',
-            'description' => 'required'
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'description' => 'required|string'
         ]);
 
-        $state = new State();
-        $state->name = $request->input('name');
-        $state->description = $request->input('description');
-        $check = $state->save();
-
-        if ($check) {
-            return response()->json(['status' => 'success', 'message' => 'New transaction has been saved into the database']);
+        if ($validator->fails()) {
+            return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-        return response()->json(['status' => 'failed', 'message' => 'Error state has not been saved into the database']);
-       
+
+        try {
+            $state = new State();
+            $state->name = $request->input('name');
+            $state->description = $request->input('description');
+            $check = $state->save();
+
+            if ($check) {
+                return $this->responseWrapper->ok($state);
+            }       
+        }
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
+        }
     }
 
     /**
@@ -218,26 +236,32 @@ StateController extends ApiController
      * )
      */
     public function update(Request $request, $id) {
-        $this->validate($request, [
-            'name' => 'required',
-            'description' => 'required'
+    
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'description' => 'required|string'
         ]);
+
+        if ($validator->fails()) {
+            return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
+        }
 
         
         try {
             $state = State::findOrFail($id);
-
             $state->name = $request->input('name');
             $state->description = $request->input('description');
             $check = $state->update();
 
             if ($check) {
-                return response()->json(['status' => 'success', 'messages' => 'State has been updated', 'state' => $state]);
+                return $this->responseWrapper->ok($state);
             }
         }
-
         catch(ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'Error transaction has not been saved into the database']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
+        }
+        catch(\Exception $e) {
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
@@ -274,14 +298,16 @@ StateController extends ApiController
         try {
             $state = State::findOrFail($id);
 
-            $check = $state->delete();
-
-            if ($check) {
-                return response()->json('State has been deleted');
+            if ($state->delete()) {
+                return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
-            return response()->json(['status' => 'failed', 'message' => 'Error couldnot delete the state ']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
+        }
+
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
 
     }
@@ -317,12 +343,17 @@ StateController extends ApiController
     public function restore($id) {
 
         try {
-            State::withTrashed()->findOrFail($id)->restore();
+            $state = State::withTrashed()->findOrFail($id);
+
+            if ($state->restore()) {
+                return $this->responseWrapper->ok($state);
+            }
         }
         catch(ModelNotFoundException $e) { 
-            return response()->json(['status' => 'failed', 'message' => 'State not found']);
+            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
-        return response()->json(['status' => 'success','State has been restored']);
-
+        catch (\Exception $e) {
+            return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
+        }
     }
 }
