@@ -32,7 +32,7 @@ class AuthenticateMiddleware
             $config = new AuthSDK\Config();
             $config->setOrigin('digitalefactuur');
             $tokenService = new AuthSDK\TokenService($config);
-
+        
             try {
                 if ($token = $tokenService->verifyAccessToken($token, str_replace('\\n', "\n", env('PUBLIC_KEY')))) {
                     if ($token['exp'] > strtotime(date('Y-m-d'))) {

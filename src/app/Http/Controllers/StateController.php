@@ -41,7 +41,7 @@ class StateController extends ApiController
 
     public function __construct()
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
     }
 
