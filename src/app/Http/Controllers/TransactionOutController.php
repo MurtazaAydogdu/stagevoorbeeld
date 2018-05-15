@@ -143,7 +143,7 @@ class TransactionOutController extends ApiController
     public function show($id){
 
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->where('account_id', $id);
     
             if ($transaction) {
                 return $this->responseWrapper->ok($transaction);
@@ -219,40 +219,7 @@ class TransactionOutController extends ApiController
         if ($validator->fails()) {
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-
-        $exception = $this->getFromSubscriptionApi('/exceptions/', 8);
-        
-        $arr = json_decode($exception, true);
-
-        if ($arr['status'] === 'success') {
-
-            foreach ($arr['data'] as $value) {
-                if ($value['is_valid'] === 1 ) {
-                    $obj = (object) $value;
-                    break;
-                }
-                else {
-                    $this->getSubscripionRules();
-                }
-            }
-            $decodedObj = json_decode(json_encode($obj), true);
-            $transaction = $this->getTransactionByAccountId();
-
-            if (count($transaction) < $decodedObj['quantity']) {
-                return $this->saveTransactionToDatabase(0, $request->description); 
-            }
-            else {
-                $this->updateSubscriptionIsValid($decodedObj);
-               
-                $checkAmountInWallet = $this->checkIfUserHasEnoughAmountInWallet($decodedObj, $request->description);
-               
-                if ($checkAmountInWallet) {
-                    return $checkAmountInWallet;
-                }else {
-                    return $checkAmountInWallet;
-                }
-            }
-        }
+        return $this->getSubscripionRulesException($request->description);  
     }
 
     /**
@@ -421,12 +388,96 @@ class TransactionOutController extends ApiController
         }
     }
 
+    private function getSubscripionRulesException($description) {
+        $exception = $this->getFromSubscriptionApi('/exceptions/', ACCOUNT_ID);
+       
+        $arr = json_decode($exception, true);
+
+        if ($arr['status'] === 'success') {
+            $this->test($arr['data'], $description);
+        }
+        else {
+            return $this->getSubscripionRules($description);
+        }
+    }
+
+    private function test($arr, $description) {
+
+        $tmpArr = $arr;
+        $selectedObj = reset($tmpArr);
+        array_shift($tmpArr);
+
+        //get the transaction out the transaction_out table
+        $transaction = $this->getTransactionByAccountIdAndDate($selectedObj['time_period']);
+    
+        $total = 0;
+
+        foreach($transaction as $value) {
+            if ($value->subscription_id === $selectedObj['subscription_id']) {
+                $total++;
+            }
+        }
+
+        if ($total < $selectedObj['quantity']) {
+            $test=  $this->saveTransactionToDatabase(0, $description, $selectedObj['subscription_id']); 
+        }
+        else {
+            if (count($tmpArr) === 0) {
+                return $this->checkIfUserHasEnoughAmountInWallet($selectedObj, $description, $selectedObj['subscription_id']);
+            }
+            else {
+                $this->test($tmpArr, $description);
+            }
+        }
+    }
+
+    private function getSubscripionRules ($description) {
+        $accountSubscription = $this->getFromSubscriptionApi('/account/subscriptions/', ACCOUNT_ID);
+            
+        $decodedAccountSubscription = json_decode($accountSubscription, true);
+
+        $rules = $this->getFromSubscriptionApi('/rules/', $decodedAccountSubscription['data']['subscription_id']);
+
+        $decodedRules = json_decode($rules, true);
+
+        $transaction = $this->getTransactionByAccountId();
+
+        if (count($transaction) < $decodedRules['data'][0]['quantity']) {
+            return $this->saveTransactionToDatabase(0, $description, $decodedRules['subscription_id']);
+        }
+        else {
+            $checkAmountInWallet = $this->checkIfUserHasEnoughAmountInWallet($decodedRules['data'][0], $description);
+            if ($checkAmountInWallet) {
+                return $checkAmountInWallet;
+            }
+            else {
+                return $checkAmountInWallet;
+            }
+        }
+    }
+
+    private function getTransactionByAccountIdAndDate($time_period) {
+        try {
+            $trans =  TransactionOut::where('origin', ORIGIN_NAME)
+                ->where('account_id', ACCOUNT_ID)
+                ->where('date', '>=', ($time_period === 'quarter' ? date(sprintf('Y-%s-01', floor((date('n') - 1) / 3) * 3 + 1)) : date('Y-m')))
+                ->where('date', '<=', ($time_period === 'quarter' ? date(sprintf('Y-%s-t', floor((date('n') + 2) / 3) * 3)) : date('Y-m', strtotime('+1 '. $time_period))))
+                ->get();
+            return $trans;
+        }
+        catch (ModelNotFoundException $e) {
+            return 'not found ' . $e->getMessage();
+        }
+
+        catch (\Exception $e) {
+            return 'exception';
+        }
+    }
+
     private function getTransactionByAccountId() {
         try {
             $trans =  TransactionOut::where('origin', ORIGIN_NAME)
                 ->where('account_id', ACCOUNT_ID)
-                ->where('date', '>=', date('Y-m'))
-                ->where('date', '<=', date('Y-m', strtotime('+1 month')))
                 ->get();
 
             return $trans;
@@ -451,11 +502,12 @@ class TransactionOutController extends ApiController
         return $response->getBody()->getContents();
     }
 
-    private function saveTransactionToDatabase($price, $description) {
+    private function saveTransactionToDatabase($price, $description, $subscription_id) {
         try {
             $transaction = new TransactionOut();
             $transaction->account_id = ACCOUNT_ID;
             $transaction->state_id = 1;
+            $transaction->subscription_id = $subscription_id;
             $transaction->amount = $price;
             $transaction->description = $description;
             $transaction->date = date('Y-m-d');
@@ -467,74 +519,33 @@ class TransactionOutController extends ApiController
             }
         }
         catch (\Exception $e) {
-            $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
+            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
-    private function checkIfUserHasEnoughAmountInWallet($obj, $description) {
-        $transaction = $this->transactionRepo->get(ACCOUNT_ID);
-                
-        $decoded = json_decode($transaction);
+    private function checkIfUserHasEnoughAmountInWallet($obj, $description, $subscription_id) {
 
-        if ($decoded->amount <  $obj['price']) {
+        //get transaction_in on account_id
+        $transaction = $this->transactionRepo->get(ACCOUNT_ID);
+
+        $totalTransactionIn = 0;
+        foreach (json_decode($transaction, true) as $value) {
+            $totalTransactionIn += $value['amount'];
+        }
+
+        // get transaction_out on accout_id
+        $transactionOut = $this->getTransactionByAccountId();
+
+        $totalTransactionOut = 0;
+        foreach(json_decode($transactionOut, true) as $value) {
+            $totalTransactionOut += $value['amount'];
+        }
+
+        if ( $totalTransactionIn < ($totalTransactionOut + $obj['price'])) {
             return $this->responseWrapper->ok('Insufficient balance in the wallet');
         }
         else {
-            $newAmount = $decoded->amount - $obj['price'];
-            $transactionIn = $this->transactionRepo->create($newAmount, $description);
-            $transactionOut = $this->saveTransactionToDatabase($obj['price'], $description);
-
-            if ($transactionIn && $transactionOut) {
-                return $transactionIn;
-            }
-        }
-    }
-
-    private function updateSubscriptionIsValid($exception) {
-        $client = new Client();
-
-        $client->request('PUT', '192.168.60.103:8000/exceptions/' . $exception['id'], [
-            'headers' => [
-                'authorization' => env('ACCESS_TOKEN')
-            ],
-            'form_params' => [
-                'account_id' => $exception['account_id'], 
-                'subscription_id' => $exception['subscription_id'], 
-                'product_id' => $exception['product_id'], 
-                'price' => $exception['price'], 
-                'quantity' => $exception['quantity'], 
-                'time_period' => $exception['time_period'], 
-                'priority' => $exception['priority'], 
-                'origin_name' => $exception['origin_name'], 
-                'is_valid' => 0 ,
-                'is_infinite' => $exception['is_infinite']
-            ]
-        ]);
-    }
-
-    private function getSubscripionRules () {
-        $accountSubscription = $this->getFromSubscriptionApi('/account/subscriptions/', 4);
-            
-        $decodedAccountSubscription = json_decode($accountSubscription, true);
-
-        $rules = $this->getFromSubscriptionApi('/rules/', $decodedAccountSubscription['data']['subscription_id']);
-
-        $decodedRules = json_decode($rules, true);
-
-        $transaction = $this->getTransactionByAccountId();
-
-        if (count($transaction) < $decodedRules['data'][0]['quantity']) {
-            return $this->saveTransactionToDatabase(0, $request->description);
-        }
-        else {
-            $checkAmountInWallet = $this->checkIfUserHasEnoughAmountInWallet($decodedRules['data'][0], $request->description);
-
-            if ($checkAmountInWallet) {
-                return $checkAmountInWallet;
-            }
-            else {
-                return $checkAmountInWallet;
-            }
+            return $this->saveTransactionToDatabase($obj['price'], $description, $subscription_id);
         }
     }
 }

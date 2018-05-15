@@ -16,7 +16,7 @@ class TransactionInRepository implements TransactionInInterface {
     }
 
     public function get($id) {
-        return TransactionIn::where('account_id', $id)->orderBy('created_at', 'desc')->first();
+        return TransactionIn::where('account_id', $id)->get();
     }
 
     public function create($amount, $description) {
@@ -31,7 +31,7 @@ class TransactionInRepository implements TransactionInInterface {
             $check = $transaction->save();
 
             if ($check) {
-                return $transaction;
+                return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
