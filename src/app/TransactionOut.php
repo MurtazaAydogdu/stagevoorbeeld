@@ -63,6 +63,7 @@ class TransactionOut extends Model
 
     protected $fillable = ['account_id', 'state_id', 'subscription_id', 'amount', 'description', 'date', 'origin'];
 
+    
     public function state() {
         $this->hasOne(State::class);
     }

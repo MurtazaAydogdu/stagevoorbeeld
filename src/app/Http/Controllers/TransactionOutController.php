@@ -219,7 +219,7 @@ class TransactionOutController extends ApiController
         if ($validator->fails()) {
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-        return $this->getSubscripionRulesException($request->description);  
+        return $this->getSubscriptionRulesException($request->description);  
     }
 
     /**
@@ -314,7 +314,7 @@ class TransactionOutController extends ApiController
         }
 
         catch (ModelNotFoundException $e) {
-            return $this->responseWrapper->notFound(array('message' => 'The requested transactions has not been found', 'code' => 'ResourceNotFound'));
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
@@ -362,7 +362,7 @@ class TransactionOutController extends ApiController
             }
         }
         catch(ModelNotFoundException $e) {
-            return $this->responseWrapper->notFound(array('message' => 'The requested transactions has not been found', 'code' => 'ResourceNotFound'));
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
@@ -381,15 +381,19 @@ class TransactionOutController extends ApiController
             }
         }
         catch (ModelNotFoundException $e) {
-            return $this->responseWrapper->notFound(array('message' => 'The requested transactions has not been found', 'code' => 'ResourceNotFound'));
+            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch (\Exception $e) {
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 
-    private function getSubscripionRulesException($description) {
-        $exception = $this->getFromSubscriptionApi('/exceptions/', ACCOUNT_ID);
+    /**
+     * Deze functie is verantwoordelijk voor het ophalen van van alle subscriptionRulesException van de subscription api.
+     * In het geval van een succes case wordt de checkSubscriptionType aangeroepen en anderes de subscriptionRules.
+     */
+    private function getSubscriptionRulesException($description) {
+        $exception = $this->getFromSubscriptionApi('/exceptions/', 90);
        
         $arr = json_decode($exception, true);
 
@@ -397,25 +401,31 @@ class TransactionOutController extends ApiController
             return $this->checkSubscriptionType($arr['data'], $description);
         }
         else {
-            return $this->getSubscripionRules($description);
+            return $this->getSubscriptionRules($description);
         }
     }
 
+    /** 
+     * Deze functie is verantwoordelijk voor het ophalen van alle transactionOut op basis van account_id en time_period (month, quarter and year).
+     * Vervolgens wordt er geteld hoe vaak dit voorkomt in de tabel zodat er een vergelijking kan worden gemaakt met de opgehaalde quantity van de subscriptionExceptionRules.
+     * Als de aantal in de database kleiner is dan de quantity van de subscriptionExceptionRules, betekent dit dat de gebruiker het prodcut (gratis) kan versturen. Ook
+     * wordt er recursief gekeken of de gebruiker nog meer subscriptionExceptionRules heeft of niet. Zoniet dan wordt de checkIfUserHasEnoughAmountInWallet functie aangeroepen.
+     */
     private function checkSubscriptionType($arr, $description) {
 
         $selectedObj = reset($arr);
 
         //get the transaction out the transaction_out table
-        $transaction = $this->getTransactionByAccountIdAndDate($selectedObj['time_period']);
+        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $selectedObj['time_period']);
     
-        $total = 0;
+        $totalSubscriptions = 0;
         foreach($transaction as $value) {
             if ($value->subscription_id === $selectedObj['subscription_id']) {
-                $total++;
+                $totalSubscriptions++;
             }
         }
 
-        if ($total < $selectedObj['quantity']) {
+        if ($totalSubscriptions < $selectedObj['quantity']) {
             return $this->saveTransactionToDatabase(0, $description, $selectedObj['subscription_id']); 
         }
         else {
@@ -431,30 +441,42 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function getSubscripionRules ($description) {
+    /**
+     * Deze functie is allereerst verantwoordelijk voor het ophalen van de subscription_id in de account_subscription tabel. 
+     * Daarna wordt de rules opgehaald uit de rules tabel. Vervolgens wordt hier de transaction opgehaald op basis van de time_period 
+     * (month, quarter and year) en account_id. Tot slot wordt hier ook geteld hoevaak deze rule voorkomt in de database om vervolgens te checken 
+     * of de gebruiker nog voldoende aantal(len) producten kan versturen. Zoniet wordt hierweer de checkIfUserHasEnoughAmountInWallet functie aangeroepen.
+     */
+    private function getSubscriptionRules ($description) {
         $accountSubscription = $this->getFromSubscriptionApi('/account/subscriptions/', ACCOUNT_ID);
-            
+
         $decodedAccountSubscription = json_decode($accountSubscription, true);
 
-        $rules = $this->getFromSubscriptionApi('/rules/', $decodedAccountSubscription['data']['subscription_id']);
+        $rules = $this->getFromSubscriptionApi('/rules/', $decodedAccountSubscription['data'][0]['subscription_id']);
 
         $decodedRules = json_decode($rules, true);
+      
+        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $decodedRules['data'][0]['time_period']);
 
-        $transaction = $this->getTransactionByAccountId();
+        $totalSubscriptions = 0;
+        foreach ($transaction as $value) {
+            if ($value->subscription_id === $decodedRules['data'][0]['subscription_id']) {
+                $totalSubscriptions++;
+            }
+        }
 
-        if (count($transaction) < $decodedRules['data'][0]['quantity']) {
-            return $this->saveTransactionToDatabase(0, $description, $decodedRules['subscription_id']);
+        if ($totalSubscriptions < $decodedRules['data'][0]['quantity']) {
+            return $this->saveTransactionToDatabase(0, $description, $decodedRules['data'][0]['subscription_id']);
         }
         else {
-            $test = $this->checkIfUserHasEnoughAmountInWallet($decodedRules['data'][0], $description);
-            var_dump($test);
+            return $this->checkIfUserHasEnoughAmountInWallet($decodedRules['data'][0], $description);
         }
     }
 
-    private function getTransactionByAccountIdAndDate($time_period) {
+    private function getTransactionByAccountIdAndDate($account_id, $time_period) {
         try {
             $trans =  TransactionOut::where('origin', ORIGIN_NAME)
-                ->where('account_id', ACCOUNT_ID)
+                ->where('account_id', $account_id)
                 ->where('date', '>=', ($time_period === 'quarter' ? date(sprintf('Y-%s-01', floor((date('n') - 1) / 3) * 3 + 1)) : date('Y-m')))
                 ->where('date', '<=', ($time_period === 'quarter' ? date(sprintf('Y-%s-t', floor((date('n') + 2) / 3) * 3)) : date('Y-m', strtotime('+1 '. $time_period))))
                 ->get();
@@ -469,10 +491,10 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function getTransactionByAccountId() {
+    private function getTransactionByAccountId($account_id) {
         try {
             $trans =  TransactionOut::where('origin', ORIGIN_NAME)
-                ->where('account_id', ACCOUNT_ID)
+                ->where('account_id', $account_id)
                 ->get();
 
             return $trans;
@@ -489,7 +511,7 @@ class TransactionOutController extends ApiController
     private function getFromSubscriptionApi($url, $id) {
         $client = new Client();
 
-        $response = $client->get('192.168.60.103:8000' . $url . $id,[
+        $response = $client->get(env('SUBSCRIPTION_API_URL') . $url . $id,[
             'headers' => [
                 'authorization' => env('ACCESS_TOKEN')
             ]
@@ -501,11 +523,9 @@ class TransactionOutController extends ApiController
         try {
             $transaction = new TransactionOut();
             $transaction->account_id = ACCOUNT_ID;
-            $transaction->state_id = 1;
             $transaction->subscription_id = $subscription_id;
             $transaction->amount = $price;
             $transaction->description = $description;
-            $transaction->date = date('Y-m-d');
             $transaction->origin = ORIGIN_NAME;
             $saved = $transaction->save();
 
@@ -518,6 +538,12 @@ class TransactionOutController extends ApiController
         }
     }
 
+    /**
+     * Deze functie is allereerst verantwoordelijk voor het ophalen van alle transactionIn (ingekochte tegoed) op basis van de account_id.
+     * Vervolgens wordt de ingekochte tegoed opgeteld. Ook wordt de transactionOut (uitgaande producten bijv. een factuur verstuurt) opgehaald en
+     * de prijzen ervan opgeteld. Zodra de transactionIn kleiner is dan de TransactionOut dan heeft de gebruiker onvoldoende saldo. Anders wordt er een niewe 
+     * transactionOut weggeschreven naar de database met de prijs van het product.
+     */
     private function checkIfUserHasEnoughAmountInWallet($obj, $description) {
         //get transaction_in on account_id
         $transaction = $this->transactionRepo->get(ACCOUNT_ID);
@@ -527,8 +553,8 @@ class TransactionOutController extends ApiController
             $totalTransactionIn += $value['amount'];
         }
 
-        // get transaction_out on accout_id
-        $transactionOut = $this->getTransactionByAccountId();
+        // get transaction_out on account_id
+        $transactionOut = $this->getTransactionByAccountId(ACCOUNT_ID);
 
         $totalTransactionOut = 0;
         foreach(json_decode($transactionOut, true) as $value) {
@@ -536,7 +562,7 @@ class TransactionOutController extends ApiController
         }
     
         if ( $totalTransactionIn < ($totalTransactionOut + $obj['price'])) {
-            return $this->responseWrapper->ok('Insufficient balance in the wallet');
+            return $this->responseWrapper->reject(array('message' => 'Insufficient balance for transaction', 'code' => 'InsufficientBalance'));
         }
         else {
             return $this->saveTransactionToDatabase($obj['price'], $description, $obj['subscription_id']);

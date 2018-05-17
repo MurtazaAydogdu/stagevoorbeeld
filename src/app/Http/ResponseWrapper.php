@@ -24,6 +24,11 @@ class ResponseWrapper {
     public function ok($data) {
         return $this->handleResponse(200, $data);
     }
+
+    public function reject($data) {
+        return $this->handleResponse(403, $data);
+    }
+
     public function notImplemented($data) {
         return $this->handleResponse(501, [
             'message' => 'The requested function is not implemented',
@@ -58,9 +63,7 @@ class ResponseWrapper {
         $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
         $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
-        // if($data) {
-        //     $this->body->data = $data;
-        // }
+
         return $this->body;
     }
     private function formatErrorBody($data) {
