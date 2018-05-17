@@ -18,8 +18,6 @@ use App\Interfaces\TransactionInInterface;
 use Illuminate\Support\Facades\Validator;
 require_once __DIR__.'/../../../vendor/autoload.php';
 
-
-
 /**
  * Class TransactionOutController
  *
@@ -143,8 +141,7 @@ class TransactionOutController extends ApiController
     public function show($id){
 
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->where('account_id', $id);
-    
+            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->where('account_id', $id)->get();
             if ($transaction) {
                 return $this->responseWrapper->ok($transaction);
             }
@@ -416,7 +413,7 @@ class TransactionOutController extends ApiController
         $selectedObj = reset($arr);
 
         //get the transaction out the transaction_out table
-        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $selectedObj['time_period']);
+        $transaction = $this->getTransactionByAccountIdAndDate(200, $selectedObj['time_period']);
     
         $totalSubscriptions = 0;
         foreach($transaction as $value) {
@@ -452,24 +449,24 @@ class TransactionOutController extends ApiController
 
         $decodedAccountSubscription = json_decode($accountSubscription, true);
 
-        $rules = $this->getFromSubscriptionApi('/rules/', $decodedAccountSubscription['data'][0]['subscription_id']);
+        $rules = $this->getFromSubscriptionApi('/rules/', \__::get($decodedAccountSubscription, 'data.0.subscription_id'));
 
         $decodedRules = json_decode($rules, true);
-      
-        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $decodedRules['data'][0]['time_period']);
+       
+        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, \__::get($decodedRules, 'data.0.time_period'));
 
         $totalSubscriptions = 0;
         foreach ($transaction as $value) {
-            if ($value->subscription_id === $decodedRules['data'][0]['subscription_id']) {
+            if ($value->subscription_id === \__::get($decodedRules, 'data.0.subscription_id')) {
                 $totalSubscriptions++;
             }
         }
 
         if ($totalSubscriptions < $decodedRules['data'][0]['quantity']) {
-            return $this->saveTransactionToDatabase(0, $description, $decodedRules['data'][0]['subscription_id']);
+            return $this->saveTransactionToDatabase(0, $description, \__::get($decodedRules, 'data.0.subscription_id'));
         }
         else {
-            return $this->checkIfUserHasEnoughAmountInWallet($decodedRules['data'][0], $description);
+            return $this->checkIfUserHasEnoughAmountInWallet(\__::get($decodedRules, 'data.0'), $description);
         }
     }
 
