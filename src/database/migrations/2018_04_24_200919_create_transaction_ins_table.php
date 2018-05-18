@@ -17,7 +17,6 @@ class CreateTransactionInsTable extends Migration
             $table->increments('id');
             $table->integer('account_id');
             $table->integer('state_id');
-            $table->string('payment_id');
             $table->decimal('amount');
             $table->text('description');
             $table->date('date');

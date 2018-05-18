@@ -213,10 +213,9 @@ class TransactionInController extends ApiController
         $validator = Validator::make($request->all(), [
             'account_id' => 'required',
             'state_id' => 'required',
-            'payment_id' => 'required',
             'amount' => 'required',
             'description' => 'required',
-            'date' => 'required|strtotime',
+            'date' => 'required',
             'origin' => 'required',
         ]);
 
@@ -228,7 +227,6 @@ class TransactionInController extends ApiController
             $transaction = new TransactionIn();
             $transaction->account_id = $request->input('account_id');
             $transaction->state_id = $request->input('state_id');
-            $transaction->payment_id = 1;
             $transaction->amount = $request->input('amount');
             $transaction->description = $request->input('description');
             $transaction->date = date('Y-m-d');

@@ -16,10 +16,11 @@ class CreateTransactionOutsTable extends Migration
         Schema::create('transaction_outs', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('account_id');
-            $table->integer('state_id');
+            $table->integer('state_id')->default(2);
+            $table->integer('subscription_id');
             $table->decimal('amount');
             $table->text('description');
-            $table->date('date');
+            $table->date('date')->default(\Carbon\Carbon::now());
             $table->string('origin');
             $table->softDeletes('deleted_at');
             $table->timestamps();

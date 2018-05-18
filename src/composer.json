@@ -10,7 +10,9 @@
         "vlucas/phpdotenv": "~2.2",
         "kantoor-f12/auth-sdk-php": "^1.0",
         "zircote/swagger-php": "^2.0",
-        "mollie/mollie-api-php": "1.9.*"
+        "mollie/mollie-api-php": "1.9.*",
+        "guzzlehttp/guzzle": "^6.3",
+        "maciejczyzewski/bottomline": "^0.1.1"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
