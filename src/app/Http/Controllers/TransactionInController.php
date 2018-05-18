@@ -299,15 +299,21 @@ class TransactionInController extends ApiController
      */
     public function update(Request $request, $id) {
         try {
+
+            $validator = Validator::make($request->all(), [
+                'amount' => 'required',
+                'description' => 'required',
+            ]);
+    
+            if ($validator->fails()) {
+                return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
+            }
+
             $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
 
             if ($transaction) {
-                $transaction->account_id = $request->input('account_id');
-                $transaction->state_id = $request->input('state_id');
-                $transaction->payment_id = $request->input('payment_id');
                 $transaction->amount = $request->input('amount');
                 $transaction->description = $request->input('description');
-                $transaction->origin = $request->input('origin');
                 $save = $transaction->update();
 
                 if ($save){
