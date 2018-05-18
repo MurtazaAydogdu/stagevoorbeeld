@@ -211,26 +211,20 @@ class TransactionInController extends ApiController
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'account_id' => 'required',
-            'state_id' => 'required',
             'amount' => 'required',
             'description' => 'required',
-            'date' => 'required',
-            'origin' => 'required',
         ]);
 
         if ($validator->fails()) {
-            return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
+            return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
         try {
             $transaction = new TransactionIn();
-            $transaction->account_id = $request->input('account_id');
-            $transaction->state_id = $request->input('state_id');
+            $transaction->account_id = ACCOUNT_ID;
             $transaction->amount = $request->input('amount');
             $transaction->description = $request->input('description');
-            $transaction->date = date('Y-m-d');
-            $transaction->origin = $request->input('origin');
+            $transaction->origin = ORIGIN_NAME;
             $check = $transaction->save();
 
             if ($check) {
