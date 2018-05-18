@@ -390,7 +390,7 @@ class TransactionOutController extends ApiController
      * In a success case, the checkTotalSubscriptionsAndSave is called and otherwise the subscriptionRules.
      */
     private function getSubscriptionRulesException($description) {
-        $exception = $this->getFromSubscriptionApi('/exceptions/', 90);
+        $exception = $this->getFromSubscriptionApi('/exceptions/', ACCOUNT_ID);
        
         $arr = json_decode($exception, true);
 
