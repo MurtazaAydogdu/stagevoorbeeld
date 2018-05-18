@@ -387,7 +387,7 @@ class TransactionOutController extends ApiController
 
     /**
      * This function is responsible for retrieving all subscriptionRulesException from the subscription api. 
-     * In a success case, the checkSubscriptionType is called and otherwise the subscriptionRules.
+     * In a success case, the checkTotalSubscriptionsAndSave is called and otherwise the subscriptionRules.
      */
     private function getSubscriptionRulesException($description) {
         $exception = $this->getFromSubscriptionApi('/exceptions/', ACCOUNT_ID);
@@ -395,10 +395,10 @@ class TransactionOutController extends ApiController
         $arr = json_decode($exception, true);
 
         if ($arr['status'] === 'success') {
-            return $this->checkSubscriptionType($arr['data'], $description);
+            return $this->checkTotalSubscriptionsAndSave($arr['data'], $description);
         }
         else {
-            return $this->getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSave($description);
+            return $this->getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSaveTransaction($description);
         }
     }
 
@@ -406,12 +406,13 @@ class TransactionOutController extends ApiController
      * This function is responsible for retrieving all transactionOut based on account_id and time_period (month, quarter and year). Subsequently, 
      * it is counted how often this occurs in the table so that a comparison can be made with the retrieved quantity of the subscriptionExceptionRules. 
      * If the number in the database is smaller than the quantity of the subscriptionExceptionRules, this means that the user can send the prodcut (free). 
-     * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughAmountInWallet function is called.
+     * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called.
      */
-    private function checkSubscriptionType($arr, $description) {
+    private function checkTotalSubscriptionsAndSave($arr, $description) {
 
         //get the first element uit the array.
-        $selectedObj = reset($arr);
+        // $selectedObj = reset($arr);
+        $selectedObj = array_pop($arr);
 
         //get the transaction out the transaction_out table
         $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $selectedObj['time_period']);
@@ -434,18 +435,18 @@ class TransactionOutController extends ApiController
                 return $this->checkSubscriptionType($tmpArr, $description);
             }
             else {
-                return $this->checkIfUserHasEnoughAmountInWallet($selectedObj, $description);
+                return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $description);
             }
         }
     }
 
     /**
-     * This function is primarily responsible for retrieving the subscription_id in the account_subscription table. 
-     * Then the rules are retrieved from the rules table. Then the transaction is retrieved here on the basis of the time_period month, quarter and year) and account_id. 
-     * Finally, it also counts how often this rule occurs in the database and then checks whether the user can still send a sufficient number of (s) products. 
-     * Otherwise, the checkIfUserHasEnoughAmountInWallet function is called again.
+     * This function is primarily responsible for saving a transaction if the user has enough amount of subscriptions. First the subscription_id will get from the the subscriptions api.
+     * Secondly the rules will be retrieved from the rules table by the subscription_id. Thirdly the all the transactionOut will be retrieved based on the time_period and account_id.
+     * Finally, it also counts how often this rule occurs in the database and then checks whether the user can still send a sufficient number of products. 
+     * Otherwise, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called again.
      */
-    private function getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSave ($description) {
+    private function getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSaveTransaction ($description) {
         $accountSubscription = $this->getFromSubscriptionApi('/account/subscriptions/', ACCOUNT_ID);
 
         $decodedAccountSubscription = json_decode($accountSubscription, true);
@@ -456,18 +457,20 @@ class TransactionOutController extends ApiController
        
         $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, \__::get($decodedRules, 'data.0.time_period'));
 
+        $amountSubscription = \__::get($decodedRules, 'data.0.subscription_id');
+
         $totalSubscriptions = 0;
         foreach ($transaction as $value) {
-            if ($value->subscription_id === \__::get($decodedRules, 'data.0.subscription_id')) {
+            if ($value->subscription_id === $amountSubscription) {
                 $totalSubscriptions++;
             }
         }
 
-        if ($totalSubscriptions < \__::get($decodedRules, 'data.0.subscription_id')) {
-            return $this->saveTransactionToDatabase(0, $description, \__::get($decodedRules, 'data.0.subscription_id'));
+        if ($totalSubscriptions < $amountSubscription) {
+            return $this->saveTransactionToDatabase(0, $description, $amountSubscription);
         }
         else {
-            return $this->checkIfUserHasEnoughAmountInWallet(\__::get($decodedRules, 'data.0'), $description);
+            return $this->checkIfUserHasEnoughTransactionOutAmountAndSave(\__::get($decodedRules, 'data.0'), $description);
         }
     }
 
@@ -540,11 +543,11 @@ class TransactionOutController extends ApiController
      * This function is responsible for checking if the transactionIn amount is smaller then the transactionOut amount. If this is true then it will return 
      * 'has insufficient balance'.Otherwise a new transactionOut is writen to the database with the price of the product
      */
-    private function checkIfUserHasEnoughAmountInWallet($obj, $description) {
+    private function checkIfUserHasEnoughTransactionOutAmountAndSave($obj, $description) {
         
-        $totalTransactionIn = $this->getTransactionInAndCountTheAmount();
+        $totalTransactionIn = $this->countTransactionInByAccountId();
 
-        $totalTransactionOut = $this->getTransactionOutAndCountTheAmount();
+        $totalTransactionOut = $this->countTransactionOutByAccountId();
        
     
         if ( $totalTransactionIn < ($totalTransactionOut + $obj['price'])) {
@@ -559,7 +562,7 @@ class TransactionOutController extends ApiController
      * This function is responsible for retrieving all the transactionIn based on the account_id and 
      * counting the amount of the transactionIns.
      */
-    private function getTransactionInAndCountTheAmount() {
+    private function countTransactionInByAccountId() {
         //get transaction_in on account_id
         $transaction = $this->transactionRepo->get(ACCOUNT_ID);
 
@@ -575,7 +578,7 @@ class TransactionOutController extends ApiController
      * This function is responsible for retrieving all the transactionOut based on the account_id and 
      * counting the amount of the transactionOuts.
      */
-    private function getTransactionOutAndCountTheAmount() {
+    private function countTransactionOutByAccountId() {
          // get transaction_out on account_id
          $transactionOut = $this->getTransactionByAccountId(ACCOUNT_ID);
 
