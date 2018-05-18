@@ -425,7 +425,7 @@ class TransactionOutController extends ApiController
         }
 
         if ($totalSubscriptions < $selectedObj['quantity']) {
-            return $this->saveTransactionToDatabase(0, $description, $selectedObj['subscription_id']); 
+            return $this->saveTransactionToDatabase(0, $description, $selectedObj['subscription_id'], $selectedObj['product_id']); 
         }
         else {
             $tmpArr = $arr;
@@ -467,7 +467,7 @@ class TransactionOutController extends ApiController
         }
 
         if ($totalSubscriptions < $amountSubscription) {
-            return $this->saveTransactionToDatabase(0, $description, $amountSubscription);
+            return $this->saveTransactionToDatabase(0, $description, $amountSubscription, \__::get($decodedRules, 'data.0.product_id'));
         }
         else {
             return $this->checkIfUserHasEnoughTransactionOutAmountAndSave(\__::get($decodedRules, 'data.0'), $description);
@@ -520,11 +520,12 @@ class TransactionOutController extends ApiController
         return $response->getBody()->getContents();
     }
 
-    private function saveTransactionToDatabase($price, $description, $subscription_id) {
+    private function saveTransactionToDatabase($price, $description, $subscription_id, $product_id) {
         try {
             $transaction = new TransactionOut();
             $transaction->account_id = ACCOUNT_ID;
             $transaction->subscription_id = $subscription_id;
+            $transaction->product_id = $product_id;
             $transaction->amount = $price;
             $transaction->description = $description;
             $transaction->origin = ORIGIN_NAME;
@@ -554,7 +555,7 @@ class TransactionOutController extends ApiController
             return $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable'));
         }
         else {
-            return $this->saveTransactionToDatabase($obj['price'], $description, $obj['subscription_id']);
+            return $this->saveTransactionToDatabase($obj['price'], $description, $obj['subscription_id'], $obj['product_id']);
         }
     }
     
