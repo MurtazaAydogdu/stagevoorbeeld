@@ -17,6 +17,7 @@ class CreateTransactionOutsTable extends Migration
             $table->increments('id');
             $table->integer('account_id');
             $table->integer('state_id')->default(2);
+            $table->integer('product_id');
             $table->integer('subscription_id');
             $table->decimal('amount');
             $table->text('description');
