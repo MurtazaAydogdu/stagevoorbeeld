@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use GuzzleHttp\Client;
 use App\Http\ResponseWrapper;
+use App\Http\RabbitMQ;
 use App\Interfaces\TransactionInInterface;
 use Illuminate\Support\Facades\Validator;
 require_once __DIR__.'/../../../vendor/autoload.php';
@@ -67,10 +68,12 @@ class TransactionOutController extends ApiController
 {
     private $responseWrapper;
     private $transactionRepo;
+    private $rabbitMQ;
 
     public function __construct(TransactionInInterface $transactionRepo){
         $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
+        $this->rabbitMQ = new RabbitMQ();
         $this->transactionRepo = $transactionRepo;
     }
 
@@ -97,11 +100,13 @@ class TransactionOutController extends ApiController
      * )
      */
     public function index(){
+    
         try {
             $transaction = TransactionOut::where('origin', ORIGIN_NAME)->get();
 
             if ($transaction !=null && !empty(json_decode($transaction))) {
-                return $this->responseWrapper->ok($transaction);
+                return $this->rabbitMQ->send($this->responseWrapper->ok($transaction));
+                // return $this->responseWrapper->odobik($transaction);
             }
             return $this->responseWrapper->notFound(array('message' => 'The requested transactions has not been found', 'code' => 'ResourceNotFound'));
         }
