@@ -17,8 +17,7 @@ class RabbitMQ {
         $msg = new AMQPMessage($message);
 
         $channel->basic_publish($msg, '', env('RABBITMQ_QUEUE'));
-        echo " [x] Sent message \n";
-
+        
         $channel->close();
         $connection->close();
     }
