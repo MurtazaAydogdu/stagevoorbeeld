@@ -1,4 +1,4 @@
-FROM docker-registry.bjoola.nl/microservicetransactions/composer
+FROM docker-registry.bjoola.nl/microservicetransactions/lumen:microservicetransactions
 
 MAINTAINER Brandon van Wijk <brandon@digitalefactuur.nl>
 

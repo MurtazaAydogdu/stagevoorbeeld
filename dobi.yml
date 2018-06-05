@@ -9,6 +9,11 @@ env=settings:
 #   pull: once
 #   tags: ['{env.BASE_VERSION}']
 
+image=lumen-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen
+  tags: ['{project}', '{env.BASE_VERSION}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen
 
 image=composer-image:
   image: docker-registry.bjoola.nl/microservicetransactions/composer
@@ -19,19 +24,6 @@ image=composer-image:
   context: ./operations/docker/composer
   depends: ['lumen-image:tag']
 
-image=lumen-apache-image:
-  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
-  tags: ['{project}', '{env.BASE_VERSION}']
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/lumen-apache
-  depends: ['lumen-image:tag']
-
-
-image=lumen-image:
-  image: docker-registry.bjoola.nl/microservicetransactions/lumen
-  tags: ['{project}', '{env.BASE_VERSION}']
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/lumen
 
 image=git-image:
   image: docker-registry.bjoola.nl/microservicetransactions/git

@@ -5,11 +5,25 @@ meta:
   project: microservicetransactions
   default: build
 
+image=git-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/git
+  dockerfile: ./Dockerfile
+  tags: ['{project}', '{env.BASE_VERSION}']
+  context: ./operations/docker/git
+
 image=lumen-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen
   dockerfile: ./Dockerfile
   tags: ['{project}', '{env.BASE_VERSION}']
   context: ./operations/docker/lumen
+
+
+image=lumen-apache-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
+  tags: ['{project}', '{env.BASE_VERSION}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-apache
+  depends: ['lumen-image:tag']
 
 image=composer-image:
   image: docker-registry.bjoola.nl/microservicetransactions/composer
@@ -20,24 +34,20 @@ image=composer-image:
   context: ./operations/docker/composer
   depends: ['lumen-image:tag']
 
-image=lumen-apache-image:
-  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
-  tags: ['{project}', '{env.BASE_VERSION}']
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/lumen-apache
-  depends: ['lumen-image:tag']
-
 
 alias=build:
   tasks: [
+    'git-image:tag',
     'lumen-image:tag',
+    'lumen-apache-image:tag',
     'composer-image:tag',
-    'lumen-apache-image:tag'
+    
   ]
 
 alias=push:
   tasks: [
+    'lumen-apache-image:tag',
     'lumen-image:push',
+    'lumen-apache-image:push',
     'composer-image:push',
-    'lumen-apache-image:push'
   ]
