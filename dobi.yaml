@@ -11,35 +11,35 @@ env=settings:
 
 image=lumen-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen
-  pull: once
-  tags: ['{env.BASE_VERSION}']
+  # pull: once
+  # tags: ['{env.BASE_VERSION}']
   # debug
-  # tags: ['{project}']
-  # dockerfile: ./Dockerfile
-  # context: ./operations/docker/lumen
+  tags: ['{project}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen
 
 image=lumen-once-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
-  pull: once
-  tags: ['{env.BASE_VERSION}']
+  # pull: once
+  # tags: ['{env.BASE_VERSION}']
   # debug
-  # tags: ['{project}']
-  # dockerfile: ./Dockerfile
-  # context: ./operations/docker/lumen-once
-  # depends: ['lumen-image:tag']
+  tags: ['{project}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-once
+  depends: ['lumen-image:tag']
 
 
 image=composer-image:
   image: docker-registry.bjoola.nl/microservicetransactions/composer
-  pull: once
-  tags: ['{env.BASE_VERSION}']
+  # pull: once
+  # tags: ['{env.BASE_VERSION}']
   # debug
-  # args:
-  #   GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
-  # tags: ['{project}']
-  # dockerfile: ./Dockerfile
-  # context: ./operations/docker/lumen
-  #depends: ['lumen-image:tag']
+  args:
+    GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
+  tags: ['{project}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen
+  depends: ['lumen-image:tag']
 
 
 compose=application:
