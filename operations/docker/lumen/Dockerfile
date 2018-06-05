@@ -1,4 +1,4 @@
-FROM docker-registry.bjoola.nl/bjoola/base-image:0.0.3
+FROM docker-registry.bjoola.nl/bjoola/base-image:0.0.4
 
 
 # Install PHP-CLI using APT
