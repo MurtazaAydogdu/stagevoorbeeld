@@ -32,8 +32,6 @@ image=lumen-image:
   tags: ['{project}', '{env.BASE_VERSION}']
   dockerfile: ./Dockerfile
   context: ./operations/docker/lumen
-  depends: ['phpcli-image:tag']
-
 
 image=git-image:
   image: docker-registry.bjoola.nl/microservicetransactions/git
