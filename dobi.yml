@@ -4,10 +4,43 @@ meta:
 env=settings:
   files: [.env]
 
+# image=lumen-image:
+#   image: docker-registry.bjoola.nl/microservicetransactions/lumen
+#   pull: once
+#   tags: ['{env.BASE_VERSION}']
+
+
+image=composer-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/composer
+  tags: ['{project}', '{env.BASE_VERSION}']
+  args:
+    GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/composer
+  depends: ['lumen-image:tag']
+
+image=lumen-apache-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
+  tags: ['{project}', '{env.BASE_VERSION}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-apache
+  depends: ['lumen-image:tag']
+
+
 image=lumen-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen
-  pull: once
-  tags: ['{env.BASE_VERSION}']
+  tags: ['{project}', '{env.BASE_VERSION}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen
+  depends: ['phpcli-image:tag']
+
+
+image=git-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/git
+  dockerfile: ./Dockerfile
+  tags: ['{project}', '{env.BASE_VERSION}']
+  context: ./operations/docker/git
+
 
 compose=application:
   files: [docker-compose.yml]
@@ -19,3 +52,43 @@ compose=application:
 alias=dev:
   description: "start development server"
   tasks: ['application:attach']
+
+alias=prepare:
+  tasks: ['composer-install']
+
+alias=test:
+  description: "run phpunit"
+  tasks: ['run-phpunit']
+
+job=composer-github:
+  use: composer-image
+  mounts: [source]
+  env:
+  # go here to create yours and `export` it setenv.${USER}
+  # https://github.com/settings/tokens
+   - GITHUB_ACCESS_TOKEN={env.GITHUB_ACCESS_TOKEN:}
+  entrypoint: sh -c 'composer config -g github-oauth.github.com ${GITHUB_ACCESS_TOKEN} ; mv ${COMPOSER_HOME}/auth.json .'
+  artifact: src/auth.json
+  depends: [settings]
+
+job=composer-install:
+  use: composer-image
+  mounts: [source,cache]
+  command: install
+  artifact: src/vendor/composer/installed.json
+  depends: [composer-github]
+
+job=run-phpunit:
+  use: lumen-image
+  mounts: [source,version]
+  command: sh -c "phpdismod -s cli xdebug ;
+    phpunit --testsuite Unit"
+  depends: [settings]
+
+mount=source:
+  bind: src
+  path: /data/www
+
+mount=version:
+  bind: ./.version
+  path: /data/.version

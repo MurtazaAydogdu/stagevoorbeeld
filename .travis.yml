@@ -1,0 +1,30 @@
+---
+  before_install:
+    - cp ${JENKINS_HOME}/.ssh/config /home/.ssh/config
+    - sudo mkdir -p .dobi/volumes .dobi/images
+    - sudo chown -R 1000:1000 .dobi/volumes .dobi/images || true
+    - export
+    - pwd
+    - id
+    - echo "--- end bootstrap ---"
+    - echo "--- start setenv ---"
+    - cp .env.example .env
+    - export $(cat ./.version | xargs) && /home/bin/dobi prepare
+    # compose creates files owned by root :(
+    - sudo chown -R 106:docker src/vendor
+    - echo "--- end setenv ---"
+  script:
+    - echo "--- start lint ---"
+    - export $(cat ./.version | xargs) && dobi lint
+    - echo "--- end lint ---"
+    - echo "--- start test ---"
+    - export $(cat ./.version | xargs) && dobi test
+    - echo "--- end test ---"
+    # - echo "--- start e2e ---"
+    # - export $(cat ./.version | xargs) && dobi e2e
+    # - echo "--- end e2e ---"
+    - echo "--- start build ---"
+    - export $(cat ./.version | xargs) && ./operations/release/make.release.sh
+    - echo "--- end build ---"
+    - echo "--- begin deploy ---"
+    - echo "--- end deploy ---"

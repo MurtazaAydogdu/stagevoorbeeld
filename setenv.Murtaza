@@ -1,0 +1,3 @@
+export GITHUB_ACCESS_TOKEN=0241fd1779a65e3d7f6776b372bef8721b4a31d4
+export DB_USERNAME=dev_microservicetransactions
+export DB_PASSWORD=
