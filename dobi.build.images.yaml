@@ -31,13 +31,13 @@ image=lumen-apache-image:
 alias=build:
   tasks: [
     'lumen-image:tag',
-    'composer-image:tag'
+    'composer-image:tag',
     'lumen-apache-image:tag'
   ]
 
 alias=push:
   tasks: [
     'lumen-image:push',
-    'composer-image:push'
+    'composer-image:push',
     'lumen-apache-image:push'
   ]
