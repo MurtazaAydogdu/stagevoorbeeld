@@ -24,6 +24,7 @@
     # - export $(cat ./.version | xargs) && dobi e2e
     # - echo "--- end e2e ---"
     - echo "--- start build ---"
+    - chmod +x ./operations/release/make.release.sh
     - export $(cat ./.version | xargs) && ./operations/release/make.release.sh
     - echo "--- end build ---"
     - echo "--- begin deploy ---"
