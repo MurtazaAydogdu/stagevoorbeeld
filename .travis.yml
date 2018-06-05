@@ -8,7 +8,7 @@
     - id
     - echo "--- end bootstrap ---"
     - echo "--- start setenv ---"
-    - cp .env.example .env
+    - cp src/.env.example src/.env
     - export $(cat ./.version | xargs) && /home/bin/dobi prepare
     # compose creates files owned by root :(
     - sudo chown -R 106:docker src/vendor
