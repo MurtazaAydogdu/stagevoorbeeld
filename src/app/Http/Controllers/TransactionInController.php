@@ -13,8 +13,6 @@ use App\TransactionIn;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Mollie_API_Client;
-use Mollie_API_Exception;
 use App\Http\ResponseWrapper;
 use Illuminate\Support\Facades\Validator;
 
@@ -66,11 +64,10 @@ use Illuminate\Support\Facades\Validator;
  */
 class TransactionInController extends ApiController
 {
-    private $mollie;
-    private $responseWrapper;
+        private $responseWrapper;
 
     public function __construct(){
-        $this->middleware('auth',['except' => ['createMolliePayment']]);
+        $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
     }
 
