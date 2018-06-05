@@ -10,13 +10,234 @@
         {
             "from": {
                 "rest": {
+                    "endpoint": "/states",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.get.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/state/{id}",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.get_id.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/state/create",
+                    "method": "POST"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.created.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/state/edit/{id}",
+                    "method": "PATCH"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.updated.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/state/delete/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.deleted.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/state/restore/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.restored.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.get.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/{id}",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.get_id.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/create",
+                    "method": "POST"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.created.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/edit/{id}",
+                    "method": "PATCH"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.updated.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/delete/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.deleted.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/in/restore/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.restored.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/out/",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.get.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/out/{id}",
+                    "method": "GET"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.get_id.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
                     "endpoint": "/transaction/out/create",
                     "method": "POST"
                 }
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transaction.created.success.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.created.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/out/edit/:id",
+                    "method": "PATCH"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.updated.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/out/delete/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.deleted.#.*.~~query.origin~~"
+                }
+            }
+        },
+        {
+            "from": {
+                "rest": {
+                    "endpoint": "/transaction/out/restore/{id}",
+                    "method": "DELETE"
+                }
+            },
+            "to": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.restored.#.*.~~query.origin~~"
                 }
             }
         }
