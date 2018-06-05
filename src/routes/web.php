@@ -48,7 +48,3 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
 });
 
 $router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');
-
-$router->get('test', function () {
-    return phpinfo();
-});

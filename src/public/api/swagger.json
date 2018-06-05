@@ -446,7 +446,7 @@
                 }
             }
         },
-        "/transaction-out": {
+        "/transaction/out": {
             "get": {
                 "tags": [
                     "transaction_out"
@@ -465,7 +465,39 @@
                         "description": "Unauthorized action."
                     }
                 }
-            },
+            }
+        },
+        "/transaction/out/{id}": {
+            "get": {
+                "tags": [
+                    "transaction_out"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns transactions object.",
+                "operationId": "api.transaction_out.show",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of transaction_out to return",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transaction-In-In overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/transaction-out": {
             "post": {
                 "tags": [
                     "transaction_out"
@@ -522,62 +554,6 @@
             }
         },
         "/transaction-out/{id}": {
-            "get": {
-                "tags": [
-                    "transaction_out"
-                ],
-                "summary": "Display a listing of the resource.",
-                "description": "Returns transactions object.",
-                "operationId": "api.transaction_out.show",
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of transaction_out to return",
-                        "required": true,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transaction-In-In overview."
-                    },
-                    "401": {
-                        "description": "Unauthorized action."
-                    }
-                }
-            },
-            "delete": {
-                "tags": [
-                    "transaction_out"
-                ],
-                "summary": "Display a listing of the resource.",
-                "description": "Returns transaction overview.",
-                "operationId": "api.transaction_out.delete",
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Transaction-In-In id to delete",
-                        "required": true,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "State overview."
-                    },
-                    "401": {
-                        "description": "Unauthorized action."
-                    }
-                }
-            },
             "patch": {
                 "tags": [
                     "transaction_out"
@@ -634,6 +610,36 @@
                 "responses": {
                     "200": {
                         "description": "Transaction-In-In overview."
+                    },
+                    "401": {
+                        "description": "Unauthorized action."
+                    }
+                }
+            }
+        },
+        "/transaction/out/delete/{id}": {
+            "delete": {
+                "tags": [
+                    "transaction_out"
+                ],
+                "summary": "Display a listing of the resource.",
+                "description": "Returns transaction overview.",
+                "operationId": "api.transaction_out.delete",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Transaction-In-In id to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "State overview."
                     },
                     "401": {
                         "description": "Unauthorized action."
