@@ -1,14 +1,14 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Transaction API",
+        "title": "Transaction-In-In API",
         "contact": {
             "name": "DigitaleFactuur",
             "url": "https://digitalefactuur.nl/"
         },
         "version": "1.0"
     },
-    "host": "http://192.168.88.100/transaction_api",
+    "host": "192.168.88.101:8000",
     "basePath": "",
     "schemes": [
         "http"

@@ -11,25 +11,35 @@ env=settings:
 
 image=lumen-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen
-  tags: ['{project}', '{env.BASE_VERSION}']
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/lumen
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/lumen
+
+image=lumen-once-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/lumen-once
+  # depends: ['lumen-image:tag']
+
 
 image=composer-image:
   image: docker-registry.bjoola.nl/microservicetransactions/composer
-  tags: ['{project}', '{env.BASE_VERSION}']
-  args:
-    GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/composer
-  depends: ['lumen-image:tag']
-
-
-image=git-image:
-  image: docker-registry.bjoola.nl/microservicetransactions/git
-  dockerfile: ./Dockerfile
-  tags: ['{project}', '{env.BASE_VERSION}']
-  context: ./operations/docker/git
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # args:
+  #   GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/lumen
+  #depends: ['lumen-image:tag']
 
 
 compose=application:
@@ -68,20 +78,6 @@ job=composer-install:
   artifact: src/vendor/composer/installed.json
   depends: [composer-github]
 
-# image=lumen-once-image:
-#   image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
-#   pull: once
-#   tags: ['{project}', '{env.BASE_VERSION}']
-  # depends: ['artisan-image:tag']
-  # dockerfile: ./Dockerfile
-  # context: ./operations/docker/artisan-once
-
-image=lumen-once-image:
-  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
-  tags: ['{project}', '{env.BASE_VERSION}']
-  depends: ['lumen-image:tag']
-  dockerfile: ./Dockerfile
-  context: ./operations/docker/lumen-once
 
 job=run-phpunit:
   use: lumen-once-image

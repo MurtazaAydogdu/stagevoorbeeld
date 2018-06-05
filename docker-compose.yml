@@ -1,0 +1,65 @@
+---
+version: '3'
+services:
+  artisan:
+    image: docker-registry.bjoola.nl/microservicetransactions/lumen:${BASE_VERSION}
+    hostname: microservicetransactions
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/data/www
+    command: -S 0.0.0.0:8000 -t public
+    # https://docs.docker.com/engine/admin/logging/overview/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "16m"
+        max-file: "8"
+  
+  mysqldb:
+    image: mysql:5.7
+    hostname: mysqldb
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "transaction_api"
+      PMA_HOST: "mysqldb"
+    volumes:
+      - data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    hostname: phpmyadmin
+    ports: 
+      - "80:80"
+    links:
+      - mysqldb:db
+  
+  message-adapter:
+      image: docker-registry.bjoola.nl/message-adapter/release:0.1.0-6cb0ac5c1c
+      ports:
+       - "81:3000"
+      volumes:
+       - ./etc/config.json:/data/www/etc/config.json
+      environment:
+        - APPLICATION_NAME=message-adapter
+        - APPLICATION_PORT=3000
+        - RABBIT_HOST=192.168.0.143
+        - RABBIT_PORT=5672
+        - RABBIT_USER=root
+        - RABBIT_PASS=root
+        - RABBIT_EXCHANGE_NAME=amq.topic
+        - RABBIT_QUEUE_EXPIRES=3600000
+        - PARSED_CONFIG_PATH=./src/lib/parsed-config.json
+        - RABBIT_QUEUE_EXCLUSIVE=false
+        - RABBIT_QUEUE_DURABLE=true
+        - RABBIT_QUEUE_MESSAGE_TTL=300000
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "16m"
+          max-file: "8"
+
+volumes:
+  data:
