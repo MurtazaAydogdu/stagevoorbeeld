@@ -53,7 +53,7 @@ alias=build:
 
 alias=push:
   tasks: [
-    'lumen-apache-image:tag',
+    'git-image:push',
     'lumen-image:push',
     'lumen-once-image:push',
     'lumen-apache-image:push',
