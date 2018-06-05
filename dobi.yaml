@@ -2,7 +2,7 @@ meta:
   project: microservicetransactions
 
 env=settings:
-  files: [.env]
+  files: [./src/.env]
 
 # image=lumen-image:
 #   image: docker-registry.bjoola.nl/microservicetransactions/lumen
@@ -68,8 +68,23 @@ job=composer-install:
   artifact: src/vendor/composer/installed.json
   depends: [composer-github]
 
+# image=lumen-once-image:
+#   image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+#   pull: once
+#   tags: ['{project}', '{env.BASE_VERSION}']
+  # depends: ['artisan-image:tag']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/artisan-once
+
+image=lumen-once-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+  tags: ['{project}', '{env.BASE_VERSION}']
+  depends: ['lumen-image:tag']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-once
+
 job=run-phpunit:
-  use: lumen-image
+  use: lumen-once-image
   mounts: [source,version]
   command: sh -c "phpdismod -s cli xdebug ;
     phpunit --testsuite Unit"
@@ -82,3 +97,11 @@ mount=source:
 mount=version:
   bind: ./.version
   path: /data/.version
+
+mount=cache:
+  bind: .cache
+  path: /data/cache
+
+mount=vendor-source:
+  bind: src/vendor
+  path: /data/www/vendor

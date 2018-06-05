@@ -34,20 +34,28 @@ image=composer-image:
   context: ./operations/docker/composer
   depends: ['lumen-image:tag']
 
+image=lumen-once-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+  tags: ['{project}', '{env.BASE_VERSION}']
+  depends: ['lumen-image:tag']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-once
+
 
 alias=build:
   tasks: [
     'git-image:tag',
     'lumen-image:tag',
+    'lumen-once-image:tag',
     'lumen-apache-image:tag',
-    'composer-image:tag',
-    
+    'composer-image:tag'
   ]
 
 alias=push:
   tasks: [
     'lumen-apache-image:tag',
     'lumen-image:push',
+    'lumen-once-image:push',
     'lumen-apache-image:push',
     'composer-image:push',
   ]
