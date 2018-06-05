@@ -11,7 +11,7 @@ image=lumen-image:
   # debug
   # tags: ['{project}']
   # dockerfile: ./Dockerfile
-  # context: ./operations/docker/lumen
+  # context: ./operations/docker/lumennnnnn
 
 image=lumen-once-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
