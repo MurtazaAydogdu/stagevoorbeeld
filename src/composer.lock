@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "7af0da0dae91501fdf79abcc80b7620a",
+    "content-hash": "e7d81a8606a9483654770bcdc3c80b8c",
     "packages": [
         {
             "name": "danhunsaker/bcmath",
