@@ -61,11 +61,6 @@ class TransactionOut extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['account_id', 'state_id', 'subscription_id', 'amount', 'description', 'date', 'origin'];
-
-    
-    public function state() {
-        $this->hasOne(State::class);
-    }
+    protected $fillable = ['account_id', 'state_id', 'product_id', 'subscription_id', 'amount', 'description', 'date', 'origin'];
 
 }

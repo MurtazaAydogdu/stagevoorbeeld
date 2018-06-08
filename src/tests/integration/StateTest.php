@@ -26,10 +26,13 @@ class StateTest extends TestCase
     */
    public function test_if_we_can_get_all_states(){
 
-       $this->get('states', ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-           ->seeStatusCode(200)
-           ->seeJson();
-   }
+        $state = factory(State::class,1)->create();
+
+
+        $this->get('states', ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(200)
+            ->assertCount(1, array($state));
+        }
 
    /**
     * @test
@@ -39,8 +42,8 @@ class StateTest extends TestCase
 
        $this->get('state/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
            ->seeStatusCode(200)
-           ->seeJson();
-   }
+           ->assertCount(1, array($state));
+        }
 
    /**
     * @test

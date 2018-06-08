@@ -62,9 +62,4 @@ class TransactionIn extends Model
     use SoftDeletes;
 
     protected $fillable = ['account_id', 'state_id', 'payment_id',  'amount', 'description', 'date', 'origin'];
-
-    public function state() {
-        $this->hasOne(State::class);
-    }
-
 }
