@@ -31,10 +31,11 @@ class AuthenticateMiddleware
             //setup the config file
             $config = new AuthSDK\Config();
             $config->setOrigin('digitalefactuur');
+            $config->setOriginPublicKey('digitalefactuur', env('PUBLIC_KEY'));
             $tokenService = new AuthSDK\TokenService($config);
         
             try {
-                if ($token = $tokenService->verifyAccessToken($token, str_replace('\\n', "\n", env('PUBLIC_KEY')))) {
+                if ($token = $tokenService->verifyAccessToken($token)) {
                     if ($token['exp'] > strtotime(date('Y-m-d'))) {
                         if (!defined('ORIGIN_NAME')) define('ORIGIN_NAME', $token['origin']);
                         if (!defined('ACCOUNT_ID')) define('ACCOUNT_ID', $token['accountId']);

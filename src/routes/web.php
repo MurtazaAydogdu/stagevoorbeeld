@@ -24,7 +24,6 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->get('state/{id}', 'StateController@show');
     $router->patch('state/edit/{id}', 'StateController@update');
     $router->delete('state/delete/{id}', 'StateController@delete');
-    $router->delete('state/restore/{id}', 'StateController@restore'); 
 
     /**
      * This is the transaction-in route
@@ -34,7 +33,6 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->post('transaction/in/create', 'TransactionInController@store');
     $router->patch('transaction/in/edit/{id}', 'TransactionInController@update');
     $router->delete('transaction/in/delete/{id}', 'TransactionInController@delete');
-    $router->delete('transaction/in/restore/{id}', 'TransactionInController@restore');
 
     /**
      * This is the transaction-out route
@@ -44,7 +42,4 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->post('transaction/out/create', 'TransactionOutController@store');
     $router->patch('transaction/out/edit/{id}', 'TransactionOutController@update');
     $router->delete('transaction/out/delete/{id}', 'TransactionOutController@delete');
-    $router->delete('transaction/out/restore/{id}', 'TransactionOutController@restore');
 });
-
-$router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');

@@ -8,6 +8,7 @@ RUN add-apt-repository ppa:ondrej/php -y \
    php7.1 \
    php7.1-mysql \
    php7.1-bcmath \
+   php7.1-curl \
 &&  apt-get clean && rm -rf /var/lib/apt/lists/ */tmp/* /var/tmp/*
 
 

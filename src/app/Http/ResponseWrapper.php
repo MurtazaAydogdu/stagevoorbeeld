@@ -5,10 +5,10 @@ namespace App\Http;
 class ResponseWrapper {
 
 
-    private $body;
+    public $body;
 
     public function __construct() {
-        $this->body = new \stdClass();
+        $this->body = array();
     }
     public function notFound($data) {
         return $this->handleResponse(404, $data);
@@ -36,12 +36,12 @@ class ResponseWrapper {
         ]);
     }
     
-    private function handleResponse($status_code, $data) {
+    public function handleResponse($status_code, $data) {
         $this->body = $this->formatBody($status_code, $data);
         
         return $this->body;
     }
-    private function formatBody($status_code, $data = false) {
+    public function formatBody($status_code, $data = false) {
         
         if($status_code >= 200 && $status_code < 300) {
             $this->body = $this->formatSuccessBody($data);
@@ -50,32 +50,33 @@ class ResponseWrapper {
         } else {
             $this->body = $this->formatErrorBody($data);
         }
-        return response()->json($this->body, $status_code);
+        return $this->body;
     }
-    private function formatSuccessBody($data) {
-        $this->body->status = "success";
-        $this->body->data = $data;
+    public function formatSuccessBody($data) {
+
+        $this->body['status'] = "success";
+        $this->body['data'] = $data;
         
         return $this->body;
     }
-    private function formatFailBody($data) {
-        $this->body->status = "fail";
-        $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
+    public function formatFailBody($data) {
+        $this->body['status'] = "fail";
+        $this->body['message'] = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
-        $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
+        $this->body['code'] = isset($data['code']) ? $data['code']: 'UnknownError';
 
         return $this->body;
     }
-    private function formatErrorBody($data) {
+    public function formatErrorBody($data) {
         $this->body->status = "error";
         $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
-        $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
+        $this->body['code'] = isset($data['code']) ? $data['code']: 'UnknownError';
 
         unset($data['code']);
     
         if($data) {
-            $this->body->data = $data;
+            $this->body['data'] = $data;
         }
         return $this->body;
     }
