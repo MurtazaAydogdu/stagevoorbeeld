@@ -5,7 +5,7 @@ namespace App\Http;
 class ResponseWrapper {
 
 
-    public $body;
+    private $body;
 
     public function __construct() {
         $this->body = array();
@@ -36,12 +36,12 @@ class ResponseWrapper {
         ]);
     }
     
-    public function handleResponse($status_code, $data) {
+    private function handleResponse($status_code, $data) {
         $this->body = $this->formatBody($status_code, $data);
         
         return $this->body;
     }
-    public function formatBody($status_code, $data = false) {
+    private function formatBody($status_code, $data = false) {
         
         if($status_code >= 200 && $status_code < 300) {
             $this->body = $this->formatSuccessBody($data);
@@ -52,14 +52,14 @@ class ResponseWrapper {
         }
         return $this->body;
     }
-    public function formatSuccessBody($data) {
+    private function formatSuccessBody($data) {
 
         $this->body['status'] = "success";
         $this->body['data'] = $data;
         
         return $this->body;
     }
-    public function formatFailBody($data) {
+    private function formatFailBody($data) {
         $this->body['status'] = "fail";
         $this->body['message'] = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
@@ -67,9 +67,9 @@ class ResponseWrapper {
 
         return $this->body;
     }
-    public function formatErrorBody($data) {
-        $this->body->status = "error";
-        $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
+    private function formatErrorBody($data) {
+        $this->body['status'] = "error";
+        $this->body['message'] = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
         $this->body['code'] = isset($data['code']) ? $data['code']: 'UnknownError';
 

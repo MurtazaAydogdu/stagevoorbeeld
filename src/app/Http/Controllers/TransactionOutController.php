@@ -12,7 +12,6 @@ use App\TransactionOut;
 use App\TransactionIn;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use GuzzleHttp\Client;
 use App\Http\ResponseWrapper;
 use App\Http\SenderToMessageAdapter;
 use App\Interfaces\TransactionInInterface;
