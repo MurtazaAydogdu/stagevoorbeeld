@@ -7,5 +7,4 @@ services:
       service: mysqldb
     environment:
       - MYSQL_DATABASE=transaction_api_test
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=root
