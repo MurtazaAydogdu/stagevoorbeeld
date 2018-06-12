@@ -1,6 +1,11 @@
 ---
 version: '2'
 services: 
+  artisan:
+    extends:
+      file: 'docker-compose.yml'
+      service: artisan
+
   mysqldb:
     extends:
       file: 'docker-compose.yml'

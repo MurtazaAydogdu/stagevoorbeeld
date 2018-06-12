@@ -5,7 +5,7 @@ use App\State;
 
 class StateTest extends TestCase
 {
-    protected $baseUrl = '192.168.88.100:8000';
+    protected $baseUrl = 'artisan:8000';
 
     use DatabaseTransactions;
 
