@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '2'
 services:
   artisan:
     image: docker-registry.bjoola.nl/microservicetransactions/lumen:${BASE_VERSION}
@@ -19,22 +19,22 @@ services:
   mysqldb:
     image: mysql:5.7
     hostname: mysqldb
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "transaction_api"
       PMA_HOST: "mysqldb"
     volumes:
-      - data:/var/lib/mysql
+      - /var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     hostname: phpmyadmin
     ports: 
       - "80:80"
-    links:
-      - mysqldb:db
+    depends_on:
+      - mysqldb
+    environment:
+      - PMA_HOST=mysqldb
   
   message-adapter:
       image: docker-registry.bjoola.nl/message-adapter/release:0.1.0-6cb0ac5c1c
@@ -60,6 +60,3 @@ services:
         options:
           max-size: "16m"
           max-file: "8"
-
-volumes:
-  data:

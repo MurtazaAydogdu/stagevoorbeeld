@@ -6,3 +6,4 @@ Homestead.yaml
 .dobi
 /.vscode
 .cache
+docker-compose.override.yml

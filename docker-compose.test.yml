@@ -1,0 +1,11 @@
+---
+version: '2'
+services: 
+  mysqldb:
+    extends:
+      file: 'docker-compose.yml'
+      service: mysqldb
+    environment:
+      - MYSQL_DATABASE=transaction_api_test
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root

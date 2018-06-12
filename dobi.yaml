@@ -1,9 +1,16 @@
 meta:
   project: microservicetransactions
 
+#############
+# ENV
+#############
 env=settings:
   files: [./src/.env]
 
+
+#############
+# IMAGES
+#############
 image=lumen-image:
   image: docker-registry.bjoola.nl/microservicetransactions/lumen
   pull: once
@@ -37,24 +44,53 @@ image=composer-image:
   # depends: ['lumen-image:tag']
 
 
+#############
+# VOLUMES 
+#############
+
+mount=version:
+  bind: ./.version
+  path: /data/.version
+
+mount=waitforit:
+  bind: ./operations/utils/wait-for-it.sh
+  path: /opt/utils/wait-for-it.sh
+  file: true
+
+mount=env:
+  bind: src/.env
+  path: /data/www/.env
+  file: true
+
+mount=cache:
+  bind: .cache
+  path: /data/cache
+
+mount=vendor-source:
+  bind: src/vendor
+  path: /data/www/vendor
+
+mount=source:
+  bind: src
+  path: /data/www
+
+#############
+# COMPOSE 
+#############
 compose=application:
-  files: [docker-compose.yml]
+  files: [docker-compose.yml, docker-compose.override.yml]
   project: '{project}'
   # depends: [
   #   'lumen-image:pull',
   # ]
 
-alias=dev:
-  description: "start development server"
-  tasks: ['application:attach']
+compose=application-test:
+  files: [docker-compose.test.yml]
+  project: '{project}test'
 
-alias=prepare:
-  tasks: ['composer-install']
-
-alias=test:
-  description: "run phpunit"
-  tasks: ['run-phpunit']
-
+#############
+# JOBS
+#############
 job=composer-github:
   use: composer-image
   mounts: [source]
@@ -73,7 +109,6 @@ job=composer-install:
   artifact: src/vendor/composer/installed.json
   depends: [composer-github]
 
-
 job=run-phpunit:
   use: lumen-once-image
   mounts: [source,version]
@@ -81,18 +116,55 @@ job=run-phpunit:
     phpunit --testsuite Unit"
   depends: [settings]
 
-mount=source:
-  bind: src
-  path: /data/www
+job=wait-for-test-database:
+  use: lumen-once-image
+  mounts: [waitforit]
+  net-mode: '{project}test_default'
+  entrypoint: bash
+  command: /opt/utils/wait-for-it.sh -s -t 600 -h mysqldb -p 3306 -- echo "database up"
 
-mount=version:
-  bind: ./.version
-  path: /data/.version
+job=test-migrate:
+  use: lumen-once-image
+  mounts: ['source']
+  net-mode: '{project}test_default'
+  depends: ['settings', 'wait-for-test-database']
+  command: php artisan migrate:refresh
+  env:
+    - APP_ENV=testing
+    - DB_HOST=mysqldb
+    - DB_DATABASE=transaction_api_test
+    - DB_USERNAME=root
+    - DB_PASSWORD=root
 
-mount=cache:
-  bind: .cache
-  path: /data/cache
+job=run-phpunit-e2e:
+  use: lumen-once-image
+  mounts: [source,version, env]
+  command: sh -c "phpdismod -s cli xdebug ;
+    phpunit --testsuite Unit"
+  depends: ['settings', 'application-test',  'test-migrate']
+  net-mode: '{project}test_default'
+  env:
+    - APP_ENV=testing
+    - DB_HOST=mysqldb
+    - DB_DATABASE=transaction_api_test
+    - DB_USERNAME=root
+    - DB_PASSWORD=root
 
-mount=vendor-source:
-  bind: src/vendor
-  path: /data/www/vendor
+
+#############
+# ALIAS
+#############
+alias=dev:
+  description: "start development server"
+  tasks: ['application:attach']
+
+alias=prepare:
+  tasks: ['composer-install']
+
+alias=test:
+  description: "run phpunit"
+  tasks: ['run-phpunit']
+
+alias=e2e:
+  description: "run phpunit e2e"
+  tasks: ['run-phpunit-e2e']
