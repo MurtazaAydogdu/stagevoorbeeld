@@ -3,7 +3,7 @@ version: '2'
 services:
   artisan:
     image: docker-registry.bjoola.nl/microservicetransactions/lumen:${BASE_VERSION}
-    hostname: microservicetransactions
+    hostname: artisan
     ports:
       - "8000:8000"
     volumes:
