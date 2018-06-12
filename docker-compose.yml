@@ -22,9 +22,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "transaction_api"
-      PMA_HOST: "mysqldb"
-    volumes:
-      - /var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

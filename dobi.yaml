@@ -141,7 +141,7 @@ job=run-phpunit-e2e:
   mounts: [source,version, env]
   command: sh -c "phpdismod -s cli xdebug ;
     phpunit --testsuite Unit"
-  depends: ['settings', 'application-test',  'test-migrate']
+  depends: ['settings', 'application-test:attach',  'test-migrate']
   net-mode: '{project}test_default'
   env:
     - APP_ENV=testing
