@@ -17,12 +17,12 @@
     # - echo "--- start lint ---"
     # - export $(cat ./.version | xargs) && dobi lint
     # - echo "--- end lint ---"
-    - echo "--- start test ---"
-    - export $(cat ./.version | xargs) && dobi test
-    - echo "--- end test ---"
-    # - echo "--- start e2e ---"
-    # - export $(cat ./.version | xargs) && dobi e2e
-    # - echo "--- end e2e ---"
+    # - echo "--- start test ---"
+    # - export $(cat ./.version | xargs) && dobi test
+    # - echo "--- end test ---"
+    - echo "--- start e2e ---"
+    - export $(cat ./.version | xargs) && dobi e2e
+    - echo "--- end e2e ---"
     - echo "--- start build ---"
     - chmod +x ./operations/release/make.release.sh
     - export $(cat ./.version | xargs) && ./operations/release/make.release.sh
