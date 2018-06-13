@@ -10,6 +10,8 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
+use Illuminate\Http\Response;
+
 
 $router->get('/', function () use ($router) {
     return $router->app->version();
@@ -45,6 +47,21 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->patch('transaction/out/edit/{id}', 'TransactionOutController@update');
     $router->delete('transaction/out/delete/{id}', 'TransactionOutController@delete');
     $router->delete('transaction/out/restore/{id}', 'TransactionOutController@restore');
+
+});
+
+$router->get('api/swagger', function () {
+
+    // $response = new Response();
+    // $response->setContent(file_get_contents(base_path("swagger.json")));
+    // $response->withHeaders(['Content-Type' => 'application/json']);
+
+    $file = file_get_contents(base_path('swagger.json'));
+
+    return response($file)
+            ->header('Content-Type', 'application/json');;
+
+    
 });
 
 $router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');
