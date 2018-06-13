@@ -1,6 +1,6 @@
 FROM docker-registry.bjoola.nl/microservicetransactions/lumen:microservicetransactions
 
-MAINTAINER Brandon van Wijk <brandon@digitalefactuur.nl.nl>
+MAINTAINER Murtaza Aydogdu <murtaza@digitalefactuur.nl>
 
 # add multiverse
 RUN sed -i_orig \
