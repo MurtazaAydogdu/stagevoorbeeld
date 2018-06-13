@@ -1,0 +1,61 @@
+---
+# curl -L -o ${HOME}/bin/dobi "https://github.com/dnephin/dobi/releases/download/v0.8/dobi-$(uname -s)" ; chmod +x ${HOME}/bin/dobi
+
+meta:
+  project: microservicetransactions
+  default: build
+
+image=git-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/git
+  dockerfile: ./Dockerfile
+  tags: ['{project}', '{env.BASE_VERSION}']
+  context: ./operations/docker/git
+
+image=lumen-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen
+  dockerfile: ./Dockerfile
+  tags: ['{project}', '{env.BASE_VERSION}']
+  context: ./operations/docker/lumen
+
+
+image=lumen-apache-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
+  tags: ['{project}', '{env.BASE_VERSION}']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-apache
+  depends: ['lumen-image:tag']
+
+image=composer-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/composer
+  tags: ['{project}', '{env.BASE_VERSION}']
+  args:
+    GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/composer
+  depends: ['lumen-image:tag']
+
+image=lumen-once-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+  tags: ['{project}', '{env.BASE_VERSION}']
+  depends: ['lumen-image:tag']
+  dockerfile: ./Dockerfile
+  context: ./operations/docker/lumen-once
+
+
+alias=build:
+  tasks: [
+    'git-image:tag',
+    'lumen-image:tag',
+    'lumen-once-image:tag',
+    'lumen-apache-image:tag',
+    'composer-image:tag'
+  ]
+
+alias=push:
+  tasks: [
+    'git-image:push',
+    'lumen-image:push',
+    'lumen-once-image:push',
+    'lumen-apache-image:push',
+    'composer-image:push',
+  ]

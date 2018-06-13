@@ -1,0 +1,80 @@
+FROM docker-registry.bjoola.nl/microservicetransactions/composer:{{ .BaseVersion }}
+
+# mount=cache:
+#  bind: .cache
+#  path: /data/cache
+MOUNT .cache:/data/cache
+
+# shared volume to build app in
+MOUNT /opt/release
+
+# get the release code into the image
+MOUNT ./release:/tmp
+
+ARG CACHE_DATE={{ .CACHE_DATE }}
+RUN mkdir -p /opt/release \
+ && rm -rf /opt/release/* \
+ && cd /opt/release \
+ && tar xvf /tmp/microservicetransactions-{{ .AppVersion }}.tar \
+ && rm /tmp/microservicetransactions-{{ .AppVersion }}.tar \
+ && export OPS_HOME=/opt/release/operations/ \
+ && export FORCE=true \
+ && ${OPS_HOME}/setVersion.sh hash {{ .Hash }}
+
+# run composer
+WORKDIR /opt/release/src
+
+ARG GITHUB_ACCESS_TOKEN={{ .GITHUB_ACCESS_TOKEN }}
+
+RUN composer config -g "github-oauth.github.com" ${GITHUB_ACCESS_TOKEN} \
+  && composer install \
+     --no-dev \
+     --prefer-dist \
+     --no-progress \
+     --optimize-autoloader
+
+
+
+# ----------
+FROM docker-registry.bjoola.nl/microservicetransactions/lumen-apache:{{ .BaseVersion }}
+
+MAINTAINER Murtaza Aydogdu <murtaza@digitalefactuur.nl>
+
+RUN mkdir -p /etc/service/apache2
+
+#&& sed -i_orig \
+#    -e "s/^ErrorLog.*$/ErrorLog syslog:local1/g" \
+#    /etc/apache2/apache2.conf \
+
+# install apache service
+
+COPY ./operations/release/service/apache2.run.sh /etc/service/apache2/run
+#RUN cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.orig
+COPY ./operations/release/config/release.conf /etc/apache2/sites-available/000-default.conf
+
+# get the code into the image
+# shared volume to build app in
+MOUNT /opt/release
+
+# https://github.com/moby/moby/issues/22832
+ARG CACHE_DATE={{ .CACHE_DATE }}
+RUN cp -R /opt/release /opt/microservicetransactions
+
+#ENV PATH=/opt/microservicetransactions/src/vendor/bin:$PATH
+WORKDIR /opt/microservicetransactions/src
+RUN mkdir -p /opt/microservicetransactions/src/storage/logs \
+&& chown -R www-data /opt/microservicetransactions/src/storage \
+&& sed \
+  -e "s/^APP_ENV=local/APP_ENV=production/g" \
+  -e "s/^APP_LOG=single/APP_LOG=errorlog/g" \
+  .env.example > .env \
+&& php artisan key:generate \
+&& chmod +x /etc/service/apache2/run
+
+EXPOSE 80
+
+ENTRYPOINT ["/sbin/my_init"]
+
+ATTACH ["/bin/bash"]
+
+PUSH docker-registry.bjoola.nl/microservicetransactions/release:{{ .AppVersion }}

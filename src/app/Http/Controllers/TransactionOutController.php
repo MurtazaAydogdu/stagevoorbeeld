@@ -97,6 +97,7 @@ class TransactionOutController extends ApiController
      * )
      */
     public function index(){
+    
         try {
             $transaction = TransactionOut::where('origin', ORIGIN_NAME)->get();
 
