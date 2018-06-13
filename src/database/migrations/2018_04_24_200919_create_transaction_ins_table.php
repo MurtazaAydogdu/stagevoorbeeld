@@ -17,6 +17,7 @@ class CreateTransactionInsTable extends Migration
             $table->increments('id');
             $table->integer('account_id');
             $table->integer('state_id')->default(2);
+            $table->string('payment_id');
             $table->decimal('amount');
             $table->text('description');
             $table->date('date')->default(\Carbon\Carbon::now());

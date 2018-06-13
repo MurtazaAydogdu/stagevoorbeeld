@@ -1,0 +1,51 @@
+---
+
+meta:
+  project: microservicetransactions
+  default: build
+
+mount=root:
+  bind: .
+  path: /mnt
+
+mount=gitconfig:
+  bind: ~/.gitconfig
+  path: /root/.gitconfig
+
+image=alpine-image:
+  image: alpine
+  tags: ['3.5']
+  pull: once
+
+image=git-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/git
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+
+image=lumen-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+
+image=lumen-apache-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-apache
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+
+job=build-release:
+  use: git-image
+  mounts: [root,gitconfig]
+  env:
+   - VERSION={env.VERSION}
+   - GIT_COMMIT={env.GIT_COMMIT}
+  command: sh -c "cd /mnt && mkdir -p release
+    && (git tag -a ${VERSION} -m ${VERSION} ${GIT_COMMIT} || true)
+    && git archive -o release/microservicetransactions-${VERSION}.tar ${GIT_COMMIT}"
+
+alias=build:
+  tasks: [
+    'git-image',
+    'lumen-image',
+    'lumen-apache-image',
+    'build-release',
+  ]

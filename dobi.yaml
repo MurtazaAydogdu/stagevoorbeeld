@@ -1,0 +1,177 @@
+meta:
+  project: microservicetransactions
+
+#############
+# ENV
+#############
+env=settings:
+  files: [./src/.env]
+
+
+#############
+# IMAGES
+#############
+image=lumen-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/lumennnnnn
+
+image=lumen-once-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/lumen-once
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/lumen-once
+  # depends: ['lumen-image:tag']
+
+
+image=composer-image:
+  image: docker-registry.bjoola.nl/microservicetransactions/composer
+  pull: once
+  tags: ['{env.BASE_VERSION}']
+  # debug
+  # args:
+  #   GITHUB_ACCESS_TOKEN: '{env.GITHUB_ACCESS_TOKEN:}'
+  # tags: ['{project}']
+  # dockerfile: ./Dockerfile
+  # context: ./operations/docker/composer
+  # depends: ['lumen-image:tag']
+
+
+#############
+# VOLUMES 
+#############
+
+mount=version:
+  bind: ./.version
+  path: /data/.version
+
+mount=waitforit:
+  bind: ./operations/utils/wait-for-it.sh
+  path: /opt/utils/wait-for-it.sh
+  file: true
+
+mount=env:
+  bind: src/.env
+  path: /data/www/.env
+  file: true
+
+mount=cache:
+  bind: .cache
+  path: /data/cache
+
+mount=vendor-source:
+  bind: src/vendor
+  path: /data/www/vendor
+
+mount=source:
+  bind: src
+  path: /data/www
+
+mount=swagger:
+  bind: ./swagger.json
+  path: /data/www/swagger.json
+  file: true
+
+#############
+# COMPOSE 
+#############
+compose=application:
+  files: [docker-compose.yml, docker-compose.override.yml]
+  project: '{project}'
+  # depends: [
+  #   'lumen-image:pull',
+  # ]
+
+compose=application-test:
+  files: [docker-compose.test.yml]
+  project: '{project}test'
+
+#############
+# JOBS
+#############
+job=composer-github:
+  use: composer-image
+  mounts: [source]
+  env:
+  # go here to create yours and `export` it setenv.${USER}
+  # https://github.com/settings/tokens
+   - GITHUB_ACCESS_TOKEN={env.GITHUB_ACCESS_TOKEN:}
+  entrypoint: sh -c 'composer config -g github-oauth.github.com ${GITHUB_ACCESS_TOKEN} ; mv ${COMPOSER_HOME}/auth.json .'
+  artifact: src/auth.json
+  depends: [settings]
+
+job=composer-install:
+  use: composer-image
+  mounts: [source,cache]
+  command: install
+  artifact: src/vendor/composer/installed.json
+  depends: [composer-github]
+
+job=run-phpunit:
+  use: lumen-once-image
+  mounts: [source,version]
+  command: sh -c "phpdismod -s cli xdebug ;
+    phpunit --testsuite Unit"
+  depends: [settings]
+
+job=wait-for-test-database:
+  use: lumen-once-image
+  mounts: [waitforit]
+  net-mode: '{project}test_default'
+  entrypoint: bash
+  command: /opt/utils/wait-for-it.sh -s -t 600 -h mysqldb -p 3306 -- echo "database up"
+
+job=test-migrate:
+  use: lumen-once-image
+  mounts: ['source']
+  net-mode: '{project}test_default'
+  depends: ['settings', 'wait-for-test-database']
+  command: php artisan migrate:refresh
+  env:
+    - APP_ENV=testing
+    - DB_HOST=mysqldb
+    - DB_DATABASE=transaction_api_test
+    - DB_USERNAME=root
+    - DB_PASSWORD=root
+
+job=run-phpunit-e2e:
+  use: lumen-once-image
+  mounts: [source,version, env]
+  command: sh -c "phpdismod -s cli xdebug ;
+    phpunit --testsuite Unit"
+  depends: ['settings', 'application-test',  'test-migrate']
+  net-mode: '{project}test_default'
+  env:
+    - APP_ENV=testing
+    - DB_HOST=mysqldb
+    - DB_DATABASE=transaction_api_test
+    - DB_USERNAME=root
+    - DB_PASSWORD=root
+    - ACCESS_TOKEN_TEST=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMDAwMyIsImFjY291bnRJZCI6IjIwMDAzIiwicm9sZSI6IlVTRVIiLCJvcmlnaW4iOiJkaWdpdGFsZWZhY3R1dXIiLCJpYXQiOjE1MjgzNjczNDYsImV4cCI6MzMwNzE2NzM2MDAsImF1ZCI6WyJkaWdpdGFsZWZhY3R1dXIiXSwiaXNzIjoiQXV0aGVudGljYXRpb24gU2VydmVyIn0.OvoohCc_nLNIN5Uz3xJoGMcNMtniB07ylv7PPl7ZBwaoz3kpHVx3-m1SSdX9VHiHIyzPs0cXNyibIf81HLAcJYio7gdb0QXqjQsjnDaSIXCFhdFR2EtoRwElLv9fGk-41jb-2SHIZHhcH-8ktSgyuwmn3r8NT5545qMAKXWWs7naijXrY6WSJt7VEc9CotBI0wt5eKp461ZYZ6RAoKvqyWwFj4mP-uKCCbPf14eWP2Tpi4Cjybu77hCJMO8_sU5bI9vA5ajVR2B1ZTYmIbaIl0XRxjHsbMVHah426y3l89AAD4U3-eSMNEtP-s25Xnf9KhlG1-k48xDgg3FZJ9Os0FdY9q4nQy4euN4n7Xxj0xevBz3CI8A6FoMo54YWAGW4ei-o_Qw6vZ_jYl0uAE8aNuzHejUQsqekEhsT19C9qRdWk3Mv_VHRZT31w0VT6JoYUDkHfQxlU31YDZ7rO6V2569CdDtYc3Ac5eEevZrSr5KcOtFvJLY1zcjTCnR7a-T5FrtxuamNmes7HPUJ4CdeM4A6C3BfYdg5-ImbcT5Uzn8IKeRLUAtTyk2Dnf8qpjC0kQmKpntoMp6LspfRPIjo6FH_rmlUV9Vo47CBWgQnfjoEoNGST4QdO8tpLU6hp7TFpTOzk5bI7zPMuoLbyPPPt4Z5NjGIEfFsHd-QtpGzTis
+    - PUBLIC_KEY=LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1JSUNJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBZzhBTUlJQ0NnS0NBZ0VBb2hWN2VybXFQZHp2RXkrT1E3c2ENCmN0c0hheExiVW9vSS92Y0RwWEE5bkdYZmp2TkgxVjUvdW1DdnRqSURUQkR1TFJRTkNaTDJ5SlVNa0JTbk1LUjUNCjk0aUMvZlNEYkFNNm9aMUdSbUZSMERIbHlCQnVTR3dDODZ0WHc4elZIbEtrbWJiMXBCakFPZ3o1Q29CRm9udGINCnp0bmM5ZzBQOXMxVE5La0o1TDNxSFBYK05YVU04Z1p4QVZsT3U0NFcwRm9SUmhxeWF2ZCtJbmVUWFluUnBWZ1YNCjBYK0JhN3cyU2wvSVJxZy9kUVhTdS92RzJFZEpVNzZHeDFBNXJUQ2hZT2gvQWFBalUzTFFWU2pLUzRmRU5ZaEcNCmJMNmwrOHBUYWtTVWxFaTZsZVpBU0FPSW5uZjd2RDd2MEdZRUVwckVGeFpWZ3AyVCtncUhYVkhvelI0MGtqVWgNCkNRTHQzOGtNTzNHS2hUUjNmTGhwYUVKZXlPbVpYbXBaN1RVMTFKbXFCOXBVazJsY2RnSXFkR0h5OGJHcGEyVGsNCmNKTGRGU2VxcUdhamFEQ3NTaCtQUHpTK21JN3ZKeUtyd0FXTVJVSFprWkYyZXpoQzJKU29HVWppREljTW9aQlENCnJRNjcvQUZNZGNyN2ExV3RScS9PTHpkcmhKV3VUeVFsSnpJN3RlQU8rVzYvaVMxRUlWVTNvZ0ovTnU1TytsRXgNClFIcjA1QnVrRElCbjM5eWpJek9mZUxaNGVBL1hVaVhEbmdodUljYmgzVHZMMmNDY2NpaFNJWExlbXVvc2dlZTYNCndaYldtQ1RoMU9FM2VPSU02V3NWcW14c2x0OWZQZ3R0VzI5ejFlUUlnWlcxWVkyRHpITVBEN3hZYitaRHFPUzcNClJ0MGRPRUhwSkhHZ1lQQStQRmZ2bDAwQ0F3RUFBUT09DQotLS0tLUVORCBQVUJMSUMgS0VZLS0tLS0=
+
+
+#############
+# ALIAS
+#############
+alias=dev:
+  description: "start development server"
+  tasks: ['application:attach']
+
+alias=prepare:
+  tasks: ['composer-install']
+
+alias=test:
+  description: "run phpunit"
+  tasks: ['run-phpunit']
+
+alias=e2e:
+  description: "run phpunit e2e"
+  tasks: ['run-phpunit-e2e']

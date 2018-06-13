@@ -40,8 +40,4 @@ class State extends Model
 
     protected $fillable = ['name','description'];
 
-    public function transaction() {
-        $this->belongsTo(TransactionIn::class);
-    }
-
 }
