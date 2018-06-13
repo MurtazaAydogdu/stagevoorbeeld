@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/data/www
+      - ./swagger.json:/data/www/swagger.json
     command: -S 0.0.0.0:8000 -t public
     # https://docs.docker.com/engine/admin/logging/overview/
     logging:
