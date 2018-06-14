@@ -65,12 +65,11 @@ class StateTest extends TestCase
     */
     public function test_if_we_can_delete_a_single_state(){
 
-        $this->disableExceptionHandler();
-
        $state = factory(State::class)->create();
-
-        $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-           ->seeStatusCode(400)
-           ->seeJson();
+       
+       $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(400)
+            ->seeJson();
+        
     }
 }
