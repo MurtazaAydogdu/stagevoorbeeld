@@ -35,7 +35,7 @@ services:
       - PMA_HOST=mysqldb
   
   message-adapter:
-      image: docker-registry.bjoola.nl/message-adapter/release:0.1.0-6cb0ac5c1c
+      image: docker-registry.bjoola.nl/message-adapter/release:0.2.0-5b61371fcc
       ports:
        - "81:3000"
       volumes:

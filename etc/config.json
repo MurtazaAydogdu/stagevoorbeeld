@@ -16,7 +16,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.created.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.created.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -29,7 +29,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.updated.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.updated.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -42,7 +42,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.deleted.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.state.deleted.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -55,7 +55,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.created.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.created.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -68,7 +68,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.updated.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.updated.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -81,7 +81,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.deleted.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionin.deleted.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -94,7 +94,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.created.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.created.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -107,7 +107,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.updated.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.updated.~~query.status~~.*.~~query.origin~~"
                 }
             }
         },
@@ -120,7 +120,7 @@
             },
             "to": {
                 "rabbit": {
-                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.deleted.#.*.~~query.origin~~"
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.deleted.~~query.status~~.*.~~query.origin~~"
                 }
             }
         }
