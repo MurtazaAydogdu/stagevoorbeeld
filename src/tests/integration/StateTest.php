@@ -2,6 +2,7 @@
 
 use Laravel\Lumen\Testing\DatabaseTransactions;
 use App\State;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
 
 class StateTest extends TestCase
 {
@@ -64,16 +65,10 @@ class StateTest extends TestCase
     * @test
     */
    public function test_if_we_can_delete_a_single_state(){
-
-
-    //  if ((\App::environment() == 'testing') && array_key_exists("HTTP_Authorization",  LRequest::server())) {
-    //         $headers['Authorization'] = LRequest::server()["HTTP_Authorization"];
-    //     }
-
        $state = factory(State::class)->create();
 
-       $this->delete('state/delete/' . $state->id,['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-           ->seeStatusCode(400)
+       $res = $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+           ->seeStatusCode(200)
            ->seeJson();
      }
 }

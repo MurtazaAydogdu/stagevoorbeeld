@@ -13,3 +13,8 @@ services:
     environment:
       - MYSQL_DATABASE=transaction_api_test
       - MYSQL_ROOT_PASSWORD=root
+  
+  message-adapter:
+    extends:
+      file: 'docker-compose.yml'
+      service: message-adapter

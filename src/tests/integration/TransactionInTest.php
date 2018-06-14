@@ -20,6 +20,7 @@ class TransactionInTest extends TestCase
         $this->post('transaction/in/create', $transaction->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatusCode(200)
             ->seeJson();
+
     }
 
     /**
@@ -105,7 +106,7 @@ class TransactionInTest extends TestCase
         $transaction->save();
 
         $this->delete('transaction/in/delete/' . $transaction->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-            ->seeStatuscode(400)
+            ->seeStatuscode(200)
             ->seeJson();
     }
 

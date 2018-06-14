@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\ResponseWrapper;
+use App\Http\SenderToMessageAdapter;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -65,10 +66,12 @@ use Illuminate\Support\Facades\Validator;
 class TransactionInController extends ApiController
 {
         private $responseWrapper;
+        private $senderToMessageAdapter;
 
     public function __construct(){
         $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
+        $this->senderToMessageAdapter = new SenderToMessageAdapter();
     }
 
     /**
