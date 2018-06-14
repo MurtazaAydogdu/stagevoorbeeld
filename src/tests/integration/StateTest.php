@@ -68,7 +68,7 @@ class StateTest extends TestCase
        $state = factory(State::class)->create();
        
        $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-            ->seeStatusCode(400)
+            ->seeStatusCode(200)
             ->seeJson();
         
     }
