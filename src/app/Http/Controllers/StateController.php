@@ -188,7 +188,7 @@ class StateController extends ApiController
             $check = $state->save();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('POST', '/state/create' , 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }       
         }

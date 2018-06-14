@@ -3,12 +3,12 @@
 use Laravel\Lumen\Testing\DatabaseTransactions;
 use App\State;
 
+
 class StateTest extends TestCase
 {
     protected $baseUrl = 'artisan:8000';
 
     use DatabaseTransactions;
-
     /**
      * @test 
      */
@@ -16,11 +16,9 @@ class StateTest extends TestCase
 
         $state = factory(State::class)->create();
 
-        $res = $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+        $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatusCode(200)
             ->seeJson();
-        
-        dd($res->response->getContent());
     }
 
    /**
@@ -65,12 +63,14 @@ class StateTest extends TestCase
    /**
     * @test
     */
-   public function test_if_we_can_delete_a_single_state(){
+    public function test_if_we_can_delete_a_single_state(){
+
+        $this->disableExceptionHandler();
 
        $state = factory(State::class)->create();
 
-       $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+        $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
            ->seeStatusCode(400)
            ->seeJson();
-     }
+    }
 }
