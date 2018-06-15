@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\ResponseWrapper;
+use App\Http\SenderToMessageAdapter;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -65,10 +66,12 @@ use Illuminate\Support\Facades\Validator;
 class TransactionInController extends ApiController
 {
         private $responseWrapper;
+        private $senderToMessageAdapter;
 
     public function __construct(){
         $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
+        $this->senderToMessageAdapter = new SenderToMessageAdapter();
     }
 
     /**
@@ -213,6 +216,7 @@ class TransactionInController extends ApiController
         ]);
 
         if ($validator->fails()) {
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -225,10 +229,12 @@ class TransactionInController extends ApiController
             $check = $transaction->save();
 
             if ($check) {
+                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -303,6 +309,7 @@ class TransactionInController extends ApiController
             ]);
     
             if ($validator->fails()) {
+                $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
                 return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
             }
 
@@ -314,14 +321,17 @@ class TransactionInController extends ApiController
                 $save = $transaction->update();
 
                 if ($save){
+                    $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                     return $this->responseWrapper->ok($transaction);
                 }
             }
         }
         catch (ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -361,59 +371,18 @@ class TransactionInController extends ApiController
             $deleted = $transaction->delete();
 
             if ($deleted) {
+                $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch(\Exception $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'error', ORIGIN_NAME,$this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
-        }
-    }
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @SWG\DELETE(
-     *     path="/transaction/in/restore/{id}",
-     *     description="Returns transaction overview.",
-     *     operationId="api.transaction_in.restore",
-     *     produces={"application/json"},
-     *     tags={"transaction_in"},
-     *     @SWG\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         type="integer",
-     *         description="Transaction id to restore"
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="State overview."
-     *     ),
-     *     @SWG\Response(
-     *         response=401,
-     *         description="Unauthorized action.",
-     *     )
-     * )
-     */
-    public function restore($id)
-    {
-        try {
-            $restored = TransactionIn::withTrashed()->findOrFail($id)->restore();
-
-            if ($restored) {
-                return $this->responseWrapper->ok($restored);
-            }                
-        }
-        catch(ModelNotFoundException $e) {
-            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
-        }
-        catch (\Exception $e) {
-            return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
     }
 }

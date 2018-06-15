@@ -3,16 +3,16 @@
 use Laravel\Lumen\Testing\DatabaseTransactions;
 use App\State;
 
+
 class StateTest extends TestCase
 {
     protected $baseUrl = 'artisan:8000';
 
     use DatabaseTransactions;
-
     /**
      * @test 
      */
-    public function test_if_we_can_create_a_new_state_with_the_right_values() {
+    public function testIfWeCanCreateANewStateWithTheRightValues() {
 
         $state = factory(State::class)->create();
 
@@ -24,7 +24,7 @@ class StateTest extends TestCase
    /**
     * @test
     */
-   public function test_if_we_can_get_all_states(){
+   public function testIfWeCanGetAllStates(){
 
         $state = factory(State::class,1)->create();
 
@@ -37,7 +37,7 @@ class StateTest extends TestCase
    /**
     * @test
     */
-   public function test_if_we_can_get_a_single_state() {
+   public function testIfWeCanGetASingleState() {
        $state = factory(State::class)->create();
 
        $this->get('state/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
@@ -48,7 +48,7 @@ class StateTest extends TestCase
    /**
     * @test
     */
-   public function test_if_we_can_update_a_single_state(){
+   public function testIfWeCanUpdateASingleState(){
 
        $state = factory(State::class)->create();
 
@@ -63,17 +63,13 @@ class StateTest extends TestCase
    /**
     * @test
     */
-   public function test_if_we_can_delete_a_single_state(){
-
-
-    //  if ((\App::environment() == 'testing') && array_key_exists("HTTP_Authorization",  LRequest::server())) {
-    //         $headers['Authorization'] = LRequest::server()["HTTP_Authorization"];
-    //     }
+    public function testIfWeCanDeleteASingleState(){
 
        $state = factory(State::class)->create();
-
-       $this->delete('state/delete/' . $state->id,['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-           ->seeStatusCode(400)
-           ->seeJson();
-     }
+       
+       $this->delete('state/delete/' . $state->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(200)
+            ->seeJson();
+        
+    }
 }

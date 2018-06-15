@@ -12,8 +12,8 @@ use App\TransactionOut;
 use App\TransactionIn;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use GuzzleHttp\Client;
 use App\Http\ResponseWrapper;
+use App\Http\SenderToMessageAdapter;
 use App\Interfaces\TransactionInInterface;
 use Illuminate\Support\Facades\Validator;
 require_once __DIR__.'/../../../vendor/autoload.php';
@@ -66,11 +66,13 @@ require_once __DIR__.'/../../../vendor/autoload.php';
 class TransactionOutController extends ApiController
 {
     private $responseWrapper;
+    private $senderToMessageAdapter;
     private $transactionRepo;
 
     public function __construct(TransactionInInterface $transactionRepo){
         $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
+        $this->senderToMessageAdapter = new SenderToMessageAdapter();
         $this->transactionRepo = $transactionRepo;
     }
 
@@ -211,10 +213,14 @@ class TransactionOutController extends ApiController
     public function store(Request $request) {
 
         $validator = Validator::make($request->all(), [
+            'product_id' => 'required',
+            'subscription_id' => 'required',
+            'amount' => 'required',
             'description' => 'required'
         ]);
 
         if ($validator->fails()) {
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
         return $this->getSubscriptionRulesException($request->description);  
@@ -283,14 +289,14 @@ class TransactionOutController extends ApiController
     public function update(Request $request, $id) {
 
         $validator = Validator::make($request->all(), [
-            'account_id' => 'required',
-            'state_id' => 'required',
+            'product_id' => 'required',
+            'subscription_id' => 'required',
             'amount' => 'required',
-            'description' => 'required',
-            'origin' => 'required',
+            'description' => 'required'
         ]);
 
         if ($validator->fails()) {
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -298,24 +304,26 @@ class TransactionOutController extends ApiController
             $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
 
             if ($transaction) {
-                $transaction->account_id = ACCOUNT_ID;
-                $transaction->state_id = 2;
+                $transaction->product_id = $request->product->id;
+                $transaction->subscription_id = $request->subscription_id->id;
                 $transaction->amount = $request->amount;
                 $transaction->description = $request->description;
-                $transaction->origin = ORIGIN_NAME;
                 $updated = $transaction->update();
 
                 if ($updated) {
+                    $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                     return $this->responseWrapper->ok($transaction);
                 }
             }
         }
 
         catch (ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
 
@@ -356,32 +364,17 @@ class TransactionOutController extends ApiController
             $deleted = $transaction->delete();
 
             if ($deleted) {
+                $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch(ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
-        }
-    }
-
-    public function restore($id) {
-        try {
-            $transaction = TransactionOut::withTrashed()->findOrFail($id);
-
-            $restored = $transaction->restore();
-
-            if ($restored) {
-                return $this->responseWrapper->ok($transaction);
-            }
-        }
-        catch (ModelNotFoundException $e) {
-            return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
-        }
-        catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -533,10 +526,12 @@ class TransactionOutController extends ApiController
             $saved = $transaction->save();
 
             if ($saved) {
+                $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }

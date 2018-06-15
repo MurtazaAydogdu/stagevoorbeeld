@@ -8,7 +8,7 @@ class ResponseWrapper {
     private $body;
 
     public function __construct() {
-        $this->body = new \stdClass();
+        $this->body = array();
     }
     public function notFound($data) {
         return $this->handleResponse(404, $data);
@@ -50,32 +50,33 @@ class ResponseWrapper {
         } else {
             $this->body = $this->formatErrorBody($data);
         }
-        return response()->json($this->body, $status_code);
+        return $this->body;
     }
     private function formatSuccessBody($data) {
-        $this->body->status = "success";
-        $this->body->data = $data;
+
+        $this->body['status'] = "success";
+        $this->body['data'] = $data;
         
         return $this->body;
     }
     private function formatFailBody($data) {
-        $this->body->status = "fail";
-        $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
+        $this->body['status'] = "fail";
+        $this->body['message'] = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
-        $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
+        $this->body['code'] = isset($data['code']) ? $data['code']: 'UnknownError';
 
         return $this->body;
     }
     private function formatErrorBody($data) {
-        $this->body->status = "error";
-        $this->body->message = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
+        $this->body['status'] = "error";
+        $this->body['message'] = isset($data['message']) ? $data['message']: 'Something went wrong on the server';
         
-        $this->body->code = isset($data['code']) ? $data['code']: 'UnknownError';
+        $this->body['code'] = isset($data['code']) ? $data['code']: 'UnknownError';
 
         unset($data['code']);
     
         if($data) {
-            $this->body->data = $data;
+            $this->body['data'] = $data;
         }
         return $this->body;
     }

@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Http\ResponseWrapper;
+use App\Http\SenderToMessageAdapter;
+
+
 
 /**
  * Class StateController
@@ -38,11 +41,13 @@ use App\Http\ResponseWrapper;
 class StateController extends ApiController
 {
     private $responseWrapper;
+    private $senderToMessageAdapter;
 
     public function __construct()
     {
         $this->middleware('auth');
         $this->responseWrapper = new ResponseWrapper();
+        $this->senderToMessageAdapter = new SenderToMessageAdapter();
     }
 
     /**
@@ -172,6 +177,7 @@ class StateController extends ApiController
         ]);
 
         if ($validator->fails()) {
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -182,10 +188,12 @@ class StateController extends ApiController
             $check = $state->save();
 
             if ($check) {
+                $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }       
         }
         catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -243,10 +251,10 @@ class StateController extends ApiController
         ]);
 
         if ($validator->fails()) {
+            $this->senderToMessageAdapter->send('PATCH','/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
-        
         try {
             $state = State::findOrFail($id);
             $state->name = $request->input('name');
@@ -254,13 +262,16 @@ class StateController extends ApiController
             $check = $state->update();
 
             if ($check) {
+                $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
         catch(\Exception $e) {
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -299,60 +310,17 @@ class StateController extends ApiController
             $state = State::findOrFail($id);
 
             if ($state->delete()) {
+                $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
-        }
-
-    }
-
-     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @SWG\DELETE(
-     *     path="/state/restore/{id}",
-     *     description="Returns state overview.",
-     *     operationId="api.state.restore",
-     *     produces={"application/json"},
-     *     tags={"state"},
-     *     @SWG\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         type="integer",
-     *         description="State id to restore"
-     *     ),
-     *     @SWG\Response(
-     *         response=200,
-     *         description="State overview."
-     *     ),
-     *     @SWG\Response(
-     *         response=401,
-     *         description="Unauthorized action.",
-     *     )
-     * )
-     */
-    public function restore($id) {
-
-        try {
-            $state = State::withTrashed()->findOrFail($id);
-
-            if ($state->restore()) {
-                return $this->responseWrapper->ok($state);
-            }
-        }
-        catch(ModelNotFoundException $e) { 
-            return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
-        }
-        catch (\Exception $e) {
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
     }
