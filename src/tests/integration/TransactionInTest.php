@@ -13,7 +13,7 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function test_if_we_can_create_a_new_transaction_in_with_the_right_values(){
+    public function testIfWeCanCreateANewTransactionInWithTheRightValues(){
 
         $transaction = factory(TransactionIn::class)->make();
 
@@ -26,10 +26,8 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function test_if_we_can_get_all_transactions() {
+    public function testIfWeCanGetAllTransactions() {
         
-        // $transaction = factory(TransactionIn::class, 2)->create();
-
         $transaction = new TransactionIn();
         $transaction->account_id = 20003;
         $transaction->state_id = 2;
@@ -49,7 +47,7 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function test_if_we_can_get_a_single_transaction_by_id() {
+    public function testIfWeCanGetASingleTransactionById() {
 
         $transaction = new TransactionIn();
         $transaction->account_id = 20003;
@@ -70,7 +68,7 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function test_if_we_can_update_a_single_transaction_by_id() {
+    public function testIfWeCanUpdateASingleTransactionById() {
 
         $transaction = new TransactionIn();
         $transaction->account_id = 20003;
@@ -93,7 +91,7 @@ class TransactionInTest extends TestCase
     /**
      * @test
      */
-    public function test_if_we_can_delete_a_single_transaction_by_id() {
+    public function testIfWeCanDeleteASingleTransactionById() {
 
         $transaction = new TransactionIn();
         $transaction->account_id = 20003;

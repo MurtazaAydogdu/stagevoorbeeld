@@ -251,7 +251,7 @@ class StateController extends ApiController
         ]);
 
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('PATCH','/state/edit/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('PATCH','/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -262,16 +262,16 @@ class StateController extends ApiController
             $check = $state->update();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('PATCH', '/state/edit/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/state/edit/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
         catch(\Exception $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/state/edit/'.$id, 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -310,17 +310,17 @@ class StateController extends ApiController
             $state = State::findOrFail($id);
 
             if ($state->delete()) {
-                $this->senderToMessageAdapter->send('DELETE', '/state/delete/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/state/delete/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/state/delete/'.$id, 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
     }

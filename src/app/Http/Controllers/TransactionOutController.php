@@ -296,7 +296,7 @@ class TransactionOutController extends ApiController
         ]);
 
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -311,19 +311,19 @@ class TransactionOutController extends ApiController
                 $updated = $transaction->update();
 
                 if ($updated) {
-                    $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit/'.$id, 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                    $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                     return $this->responseWrapper->ok($transaction);
                 }
             }
         }
 
         catch (ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit/'.$id, 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
 
@@ -364,17 +364,17 @@ class TransactionOutController extends ApiController
             $deleted = $transaction->delete();
 
             if ($deleted) {
-                $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete/'.$id, 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete/'.$id, 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete/'.$id, 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }

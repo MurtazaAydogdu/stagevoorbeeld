@@ -23,7 +23,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/state/edit/:id",
+                    "endpoint": "/state/edit",
                     "method": "PATCH"
                 }
             },
@@ -36,7 +36,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/state/delete/:id",
+                    "endpoint": "/state/delete",
                     "method": "DELETE"
                 }
             },
@@ -62,7 +62,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/transaction/in/edit/:id",
+                    "endpoint": "/transaction/in/edit",
                     "method": "PATCH"
                 }
             },
@@ -75,7 +75,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/transaction/in/delete/:id",
+                    "endpoint": "/transaction/in/delete",
                     "method": "DELETE"
                 }
             },
@@ -101,7 +101,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/transaction/out/edit/:id",
+                    "endpoint": "/transaction/out/edit",
                     "method": "PATCH"
                 }
             },
@@ -114,7 +114,7 @@
         {
             "from": {
                 "rest": {
-                    "endpoint": "/transaction/out/delete/:id",
+                    "endpoint": "/transaction/out/delete",
                     "method": "DELETE"
                 }
             },
