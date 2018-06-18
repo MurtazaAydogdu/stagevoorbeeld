@@ -36,3 +36,16 @@ $factory->define(App\TransactionIn::class, function (Faker\Generator $faker) {
         'origin' => $faker->name
     ];
 });
+
+$factory->define(App\TransactionOut::class, function (Faker\Generator $faker) {
+    return [
+        'account_id' => $faker->randomDigit,
+        'state_id' => $faker->randomDigit,
+        'product_id' => $faker->randomDigit,
+        'subscription_id' => $faker->randomDigit,
+        'amount' => $faker->randomDigit,
+        'description' => $faker->text,
+        'date' => $faker->date('Y-m-d'),
+        'origin' => $faker->name
+    ];
+});

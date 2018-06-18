@@ -213,17 +213,15 @@ class TransactionOutController extends ApiController
     public function store(Request $request) {
 
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required',
-            'subscription_id' => 'required',
-            'amount' => 'required',
-            'description' => 'required'
+            'description' => 'required',
+            'data' => 'required|array'
         ]);
 
         if ($validator->fails()) {
             $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-        return $this->getSubscriptionRulesException($request->description);  
+        return $this->checkTotalSubscriptionsAndSave($request->data, $request->description);
     }
 
     /**
@@ -304,8 +302,8 @@ class TransactionOutController extends ApiController
             $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
 
             if ($transaction) {
-                $transaction->product_id = $request->product->id;
-                $transaction->subscription_id = $request->subscription_id->id;
+                $transaction->product_id = $request->product_id;
+                $transaction->subscription_id = $request->subscription_id;
                 $transaction->amount = $request->amount;
                 $transaction->description = $request->description;
                 $updated = $transaction->update();
@@ -379,22 +377,17 @@ class TransactionOutController extends ApiController
         }
     }
 
-    /**
-     * This function is responsible for retrieving all subscriptionRulesException from the subscription api. 
-     * In a success case, the checkTotalSubscriptionsAndSave is called and otherwise the subscriptionRules.
-     */
-    private function getSubscriptionRulesException($description) {
-        $exception = $this->getFromSubscriptionApi('/exceptions/', ACCOUNT_ID);
-       
-        $arr = json_decode($exception, true);
-
-        if ($arr['status'] === 'success') {
-            return $this->checkTotalSubscriptionsAndSave($arr['data'], $description);
+    private function checkRabbitValues($data) {
+        if (!empty($data['rabbit_account_id']) && !empty($data['rabbit_origin'])) {
+            if (!defined('RABBIT_ACCOUNT_ID')) define('RABBIT_ACCOUNT_ID', $data['rabbit_account_id']);
+            if (!defined('RABBIT_ORIGIN_NAME')) define('RABBIT_ORIGIN_NAME', $data['rabbit_origin']);
+            return [RABBIT_ACCOUNT_ID, RABBIT_ORIGIN_NAME];
         }
         else {
-            return $this->getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSaveTransaction($description);
+            return [ACCOUNT_ID, ORIGIN_NAME];
         }
     }
+
 
     /** 
      * This function is responsible for retrieving all transactionOut based on account_id and time_period (month, quarter and year). Subsequently, 
@@ -404,12 +397,17 @@ class TransactionOutController extends ApiController
      */
     private function checkTotalSubscriptionsAndSave($arr, $description) {
 
+        //get the last element uit the array (account_id and origin);
+        $data = end($arr);
+
+        $res = $this->checkRabbitValues($data);
+
         //get the first element uit the array.
-        // $selectedObj = reset($arr);
-        $selectedObj = array_pop($arr);
+
+        $selectedObj = array_shift($arr);
 
         //get the transaction out the transaction_out table
-        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, $selectedObj['time_period']);
+        $transaction = $this->getTransactionByAccountIdAndDate($res[0] ,$res[1], $selectedObj['time_period']);
     
         $totalSubscriptions = 0;
         foreach($transaction as $value) {
@@ -419,58 +417,27 @@ class TransactionOutController extends ApiController
         }
 
         if ($totalSubscriptions < $selectedObj['quantity']) {
-            return $this->saveTransactionToDatabase(0, $description, $selectedObj['subscription_id'], $selectedObj['product_id']); 
+            return $this->saveTransactionToDatabase(0, $res[0], $res[1], $description, $selectedObj['subscription_id'], $selectedObj['product_id']); 
         }
         else {
             $tmpArr = $arr;
-            $tmpArr = array_slice($tmpArr, 1, 1);
+
+            if (sizeof($tmpArr) === 1) {
+                $tmpArr = [];
+            }
 
             if (!empty($tmpArr)) {
-                return $this->checkSubscriptionType($tmpArr, $description);
+                return $this->checkTotalSubscriptionsAndSave($tmpArr, $description);
             }
             else {
-                return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $description);
+                return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $res[0] ,$res[1], $description);
             }
         }
     }
 
-    /**
-     * This function is primarily responsible for saving a transaction if the user has enough amount of subscriptions. First the subscription_id will get from the the subscriptions api.
-     * Secondly the rules will be retrieved from the rules table by the subscription_id. Thirdly the all the transactionOut will be retrieved based on the time_period and account_id.
-     * Finally, it also counts how often this rule occurs in the database and then checks whether the user can still send a sufficient number of products. 
-     * Otherwise, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called again.
-     */
-    private function getSubscriptionRulesCheckTheAmountFromTheDatabaseAndSaveTransaction ($description) {
-        $accountSubscription = $this->getFromSubscriptionApi('/account/subscriptions/', ACCOUNT_ID);
-
-        $decodedAccountSubscription = json_decode($accountSubscription, true);
-
-        $rules = $this->getFromSubscriptionApi('/rules/', \__::get($decodedAccountSubscription, 'data.0.subscription_id'));
-
-        $decodedRules = json_decode($rules, true);
-       
-        $transaction = $this->getTransactionByAccountIdAndDate(ACCOUNT_ID, \__::get($decodedRules, 'data.0.time_period'));
-
-        $amountSubscription = \__::get($decodedRules, 'data.0.subscription_id');
-
-        $totalSubscriptions = 0;
-        foreach ($transaction as $value) {
-            if ($value->subscription_id === $amountSubscription) {
-                $totalSubscriptions++;
-            }
-        }
-
-        if ($totalSubscriptions < $amountSubscription) {
-            return $this->saveTransactionToDatabase(0, $description, $amountSubscription, \__::get($decodedRules, 'data.0.product_id'));
-        }
-        else {
-            return $this->checkIfUserHasEnoughTransactionOutAmountAndSave(\__::get($decodedRules, 'data.0'), $description);
-        }
-    }
-
-    private function getTransactionByAccountIdAndDate($account_id, $time_period) {
+    private function getTransactionByAccountIdAndDate($account_id,$origin, $time_period) {
         try {
-            $trans =  TransactionOut::where('origin', ORIGIN_NAME)
+            $trans =  TransactionOut::where('origin', $origin)
                 ->where('account_id', $account_id)
                 ->where('date', '>=', ($time_period === 'quarter' ? date(sprintf('Y-%s-01', floor((date('n') - 1) / 3) * 3 + 1)) : date('Y-m')))
                 ->where('date', '<=', ($time_period === 'quarter' ? date(sprintf('Y-%s-t', floor((date('n') + 2) / 3) * 3)) : date('Y-m', strtotime('+1 '. $time_period))))
@@ -486,9 +453,9 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function getTransactionByAccountId($account_id) {
+    private function getTransactionByAccountId($account_id, $origin) {
         try {
-            $trans =  TransactionOut::where('origin', ORIGIN_NAME)
+            $trans =  TransactionOut::where('origin', $origin)
                 ->where('account_id', $account_id)
                 ->get();
 
@@ -503,26 +470,15 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function getFromSubscriptionApi($url, $id) {
-        $client = new Client();
-
-        $response = $client->get(env('SUBSCRIPTION_API_URL') . $url . $id,[
-            'headers' => [
-                'authorization' => env('ACCESS_TOKEN')
-            ]
-        ]);
-        return $response->getBody()->getContents();
-    }
-
-    private function saveTransactionToDatabase($price, $description, $subscription_id, $product_id) {
+    private function saveTransactionToDatabase($price, $accountId,$origin, $description, $subscription_id, $product_id) {
         try {
             $transaction = new TransactionOut();
-            $transaction->account_id = ACCOUNT_ID;
+            $transaction->account_id = $accountId;
             $transaction->subscription_id = $subscription_id;
             $transaction->product_id = $product_id;
             $transaction->amount = $price;
             $transaction->description = $description;
-            $transaction->origin = ORIGIN_NAME;
+            $transaction->origin = $origin;
             $saved = $transaction->save();
 
             if ($saved) {
@@ -540,18 +496,18 @@ class TransactionOutController extends ApiController
      * This function is responsible for checking if the transactionIn amount is smaller then the transactionOut amount. If this is true then it will return 
      * 'has insufficient balance'.Otherwise a new transactionOut is writen to the database with the price of the product
      */
-    private function checkIfUserHasEnoughTransactionOutAmountAndSave($obj, $description) {
+    private function checkIfUserHasEnoughTransactionOutAmountAndSave($obj,$accountId, $origin, $description) {
         
-        $totalTransactionIn = $this->countTransactionInByAccountId();
+        $totalTransactionIn = $this->countTransactionInByAccountId($accountId, $origin);
 
-        $totalTransactionOut = $this->countTransactionOutByAccountId();
-       
+        $totalTransactionOut = $this->countTransactionOutByAccountId($accountId, $origin);
     
         if ( $totalTransactionIn < ($totalTransactionOut + $obj['price'])) {
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', ORIGIN_NAME, $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable')));
             return $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable'));
         }
         else {
-            return $this->saveTransactionToDatabase($obj['price'], $description, $obj['subscription_id'], $obj['product_id']);
+            return $this->saveTransactionToDatabase($obj['price'], $accountId, $origin, $description, $obj['subscription_id'], $obj['product_id']);
         }
     }
     
@@ -559,9 +515,9 @@ class TransactionOutController extends ApiController
      * This function is responsible for retrieving all the transactionIn based on the account_id and 
      * counting the amount of the transactionIns.
      */
-    private function countTransactionInByAccountId() {
+    private function countTransactionInByAccountId($accountId) {
         //get transaction_in on account_id
-        $transaction = $this->transactionRepo->get(ACCOUNT_ID);
+        $transaction = $this->transactionRepo->get($accountId);
 
         $totalTransactionIn = 0;
         foreach (json_decode($transaction, true) as $value) {
@@ -575,9 +531,9 @@ class TransactionOutController extends ApiController
      * This function is responsible for retrieving all the transactionOut based on the account_id and 
      * counting the amount of the transactionOuts.
      */
-    private function countTransactionOutByAccountId() {
+    private function countTransactionOutByAccountId($accountId, $origin) {
          // get transaction_out on account_id
-         $transactionOut = $this->getTransactionByAccountId(ACCOUNT_ID);
+         $transactionOut = $this->getTransactionByAccountId($accountId, $origin);
 
          $totalTransactionOut = 0;
          foreach(json_decode($transactionOut, true) as $value) {
