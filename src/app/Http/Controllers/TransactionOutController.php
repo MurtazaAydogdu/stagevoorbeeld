@@ -400,13 +400,12 @@ class TransactionOutController extends ApiController
         //get the last element uit the array (account_id and origin);
         $data = end($arrRules);
 
+        //check whether the request come from rabbit or from a rest call.
         $res = $this->checkRabbitValues($data);
 
         //get the first element uit the array.
 
         $selectedObj = array_shift($arrRules);
-
-        $selectedObj = json_decode($selectedObj, true);
 
         //get the transaction out the transaction_out table. $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
         $transaction = $this->getTransactionByAccountIdAndDate($res[0] ,$res[1], $selectedObj['time_period']);

@@ -29,16 +29,27 @@ class TransactionOutTest extends TestCase
         $data = [
             'description' => 'test', 
             'data' => [
-                json_encode($rule)
+                $rule
             ]
         ];
 
+        $data = json_decode(json_encode($data), true);
+
         $this->json('POST', 'transaction/out/create', $data, ['HTTP_Authorization'=> env('ACCESS_TOKEN_TEST'), 'Content-Type' => 'application/json'])
             ->seeStatusCode(200)
-            ->seeJson([
-                'status' => 'success'
+            ->seeJsonStructure([
+                'status',
+                'data' => [
+                    'account_id', 
+                    'subscription_id',
+                    'product_id',
+                    'amount',
+                    'description',
+                    'origin',
+                    'created_at',
+                    'updated_at'
+                ]
             ]);
-
     }
 
     /**
@@ -46,11 +57,11 @@ class TransactionOutTest extends TestCase
      */
     public function testIfWeCanGetAllTransactions() {
     
-        $transaction = factory(TransactionOut::class, 1)->create();
+        $transaction = factory(TransactionOut::class, 10)->create();
 
         $this->get('transaction/out', ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatusCode(200)
-            ->assertCount(1, array($transaction));
+            ->assertCount(10, $transaction->toArray());
     }
 
       /**
@@ -83,8 +94,18 @@ class TransactionOutTest extends TestCase
 
         $this->patch('transaction/out/edit/' . $transaction->id, $transaction->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatusCode(200)
-            ->seeJson([
-                'description' => 'This is the update test'
+            ->seeJsonStructure([
+                'status',
+                'data' => [
+                    'account_id', 
+                    'subscription_id',
+                    'product_id',
+                    'amount',
+                    'description',
+                    'origin',
+                    'created_at',
+                    'updated_at'
+                ]
             ]);
     }
 
@@ -97,7 +118,9 @@ class TransactionOutTest extends TestCase
 
         $this->delete('transaction/in/delete/' . $transaction->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatuscode(200)
-            ->seeJson();
+            ->seeJsonStructure([
+                'status'
+            ]);
     }
 
 }
