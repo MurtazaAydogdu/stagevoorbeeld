@@ -356,6 +356,7 @@ class TransactionOutController extends ApiController
      * )
      */
     public function delete($id){
+        
         try {
             $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
 

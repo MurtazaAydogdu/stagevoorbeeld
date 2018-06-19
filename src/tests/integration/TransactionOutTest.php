@@ -67,23 +67,24 @@ class TransactionOutTest extends TestCase
      */
     public function testIfWeCanGetAllTransactions() {
     
-        $transaction = factory(TransactionOut::class, 10)->create();
+       for ($i =0; $i<10; $i++) {
+            $transaction = new TransactionOut();
+            $transaction->account_id = $i;
+            $transaction->state_id = $i;
+            $transaction->product_id = $i;
+            $transaction->subscription_id = $i;
+            $transaction->amount = $i;
+            $transaction->description = 'This is the update test';
+            $transaction->date = date('Y-m-d');
+            $transaction->origin = 'digitalefactuur';
+            $transaction->save();
+       }
 
-        $this->get('transaction/out', ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-            ->seeStatusCode(200)
-            ->assertCount(10, $transaction->toArray());
-    }
+        $res = $this->get('transaction/out', ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(200);
 
-      /**
-     * @test
-     */
-    public function testIfWeCanGetASingleTransactionById() {
-
-        $transaction = factory(TransactionOut::class)->create();
-
-        $this->get('transaction/out/' . $transaction->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-            ->seeStatusCode(200)
-            ->assertCount(1, array($transaction));
+        $transactions = json_decode($res->response->getContent(), true);
+        $res->assertCount(10, $transactions['data']);
     }
 
     /**
@@ -130,18 +131,51 @@ class TransactionOutTest extends TestCase
             ]);
     }
 
+      /**
+     * @test
+     */
+    public function testIfWeCanGetASingleTransactionById() {
+
+        $transaction = new TransactionOut();
+        $transaction->account_id = 20003;
+        $transaction->state_id = 2;
+        $transaction->product_id = 1;
+        $transaction->subscription_id = 1;
+        $transaction->amount = 20;
+        $transaction->description = 'This is the update test';
+        $transaction->date = date('Y-m-d');
+        $transaction->origin = 'digitalefactuur';
+        $transaction->save();
+
+        $res = $this->get('transaction/out/' . $transaction->account_id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(200);
+
+        $transactions = json_decode($res->response->getContent(), true);
+
+        $res->assertCount(1, $transactions['data']);
+    }
+
     /**
      * @test
      */
     public function testIfWeCanDeleteASingleTransactionById() {
 
-        $transaction = factory(TransactionOut::class)->create();
+        $transaction = new TransactionOut();
+        $transaction->account_id = 20003;
+        $transaction->state_id = 2;
+        $transaction->product_id = 1;
+        $transaction->subscription_id = 1;
+        $transaction->amount = 20;
+        $transaction->description = 'This is the update test';
+        $transaction->date = date('Y-m-d');
+        $transaction->origin = 'digitalefactuur';
+        $transaction->save();
 
-        $this->delete('transaction/in/delete/' . $transaction->id, ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+        $this->delete('transaction/out/delete/' . $transaction->id, ['id' => $transaction->id], ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
             ->seeStatuscode(200)
             ->seeJsonStructure([
                 'status'
             ])
-            ->seeJson();
+            ->seeJson(['status' => 'success']);
     }
 }
