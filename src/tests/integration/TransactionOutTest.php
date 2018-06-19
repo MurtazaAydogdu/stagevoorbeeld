@@ -15,11 +15,30 @@ class TransactionOutTest extends TestCase
      */
     public function testIfWeCanCreateANewTransactionOutWithTheRightValues(){
 
-        $transaction = factory(TransactionOut::class)->make();
+        $rule = new \StdClass();
+        $rule->account_id = 20002;
+        $rule->subscription_id = 5;
+        $rule->product_id = 3;
+        $rule->price = "5.83";
+        $rule->quantity = 6;
+        $rule->time_period = 'year';
+        $rule->priority = 2;
+        $rule->origin_name = 'digitalefactuur';
+        $rule->is_infinite = 0;
 
-        $this->post('transaction/out/create', $transaction->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+        $data = [
+            'description' => 'test', 
+            'data' => [
+                json_encode($rule)
+            ]
+        ];
+
+        $this->json('POST', 'transaction/out/create', $data, ['HTTP_Authorization'=> env('ACCESS_TOKEN_TEST'), 'Content-Type' => 'application/json'])
             ->seeStatusCode(200)
-            ->seeJson();
+            ->seeJson([
+                'status' => 'success'
+            ]);
+
     }
 
     /**

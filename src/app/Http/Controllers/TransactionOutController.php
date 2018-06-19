@@ -395,18 +395,20 @@ class TransactionOutController extends ApiController
      * If the number in the database is smaller than the quantity of the subscriptionExceptionRules, this means that the user can send the prodcut (free). 
      * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called.
      */
-    private function checkTotalSubscriptionsAndSave($arr, $description) {
+    private function checkTotalSubscriptionsAndSave($arrRules, $description) {
 
         //get the last element uit the array (account_id and origin);
-        $data = end($arr);
+        $data = end($arrRules);
 
         $res = $this->checkRabbitValues($data);
 
         //get the first element uit the array.
 
-        $selectedObj = array_shift($arr);
+        $selectedObj = array_shift($arrRules);
 
-        //get the transaction out the transaction_out table
+        $selectedObj = json_decode($selectedObj, true);
+
+        //get the transaction out the transaction_out table. $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
         $transaction = $this->getTransactionByAccountIdAndDate($res[0] ,$res[1], $selectedObj['time_period']);
     
         $totalSubscriptions = 0;
@@ -417,28 +419,30 @@ class TransactionOutController extends ApiController
         }
 
         if ($totalSubscriptions < $selectedObj['quantity']) {
+            // $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
             return $this->saveTransactionToDatabase(0, $res[0], $res[1], $description, $selectedObj['subscription_id'], $selectedObj['product_id']); 
         }
         else {
-            $tmpArr = $arr;
+            $tmpArrRules = $arrRules;
 
-            if (sizeof($tmpArr) === 1) {
-                $tmpArr = [];
+            if (sizeof($tmpArrRules) === 1) {
+                $tmpArrRules = [];
             }
 
-            if (!empty($tmpArr)) {
-                return $this->checkTotalSubscriptionsAndSave($tmpArr, $description);
+            if (!empty($tmpArrRules)) {
+                return $this->checkTotalSubscriptionsAndSave($tmpArrRules, $description);
             }
             else {
+                // $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
                 return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $res[0] ,$res[1], $description);
             }
         }
     }
 
-    private function getTransactionByAccountIdAndDate($account_id,$origin, $time_period) {
+    private function getTransactionByAccountIdAndDate($accountId,$origin, $time_period) {
         try {
             $trans =  TransactionOut::where('origin', $origin)
-                ->where('account_id', $account_id)
+                ->where('account_id', $accountId)
                 ->where('date', '>=', ($time_period === 'quarter' ? date(sprintf('Y-%s-01', floor((date('n') - 1) / 3) * 3 + 1)) : date('Y-m')))
                 ->where('date', '<=', ($time_period === 'quarter' ? date(sprintf('Y-%s-t', floor((date('n') + 2) / 3) * 3)) : date('Y-m', strtotime('+1 '. $time_period))))
                 ->get();
@@ -453,10 +457,10 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function getTransactionByAccountId($account_id, $origin) {
+    private function getTransactionByAccountId($accountId, $origin) {
         try {
             $trans =  TransactionOut::where('origin', $origin)
-                ->where('account_id', $account_id)
+                ->where('account_id', $accountId)
                 ->get();
 
             return $trans;
