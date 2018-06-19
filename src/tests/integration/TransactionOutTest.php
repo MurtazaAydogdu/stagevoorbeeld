@@ -37,9 +37,10 @@ class TransactionOutTest extends TestCase
 
         $this->json('POST', 'transaction/out/create', $data, ['HTTP_Authorization'=> env('ACCESS_TOKEN_TEST'), 'Content-Type' => 'application/json'])
             ->seeStatusCode(200)
-            ->seeJsonStructure([
+             ->seeJsonStructure([
                 'status',
                 'data' => [
+                    'id',
                     'account_id', 
                     'subscription_id',
                     'product_id',
@@ -47,8 +48,17 @@ class TransactionOutTest extends TestCase
                     'description',
                     'origin',
                     'created_at',
-                    'updated_at'
+                    'updated_at' 
                 ]
+            ])
+            ->seeJson([
+                'account_id' => "20003",
+                'subscription_id' => 5,
+                'product_id' => 3,
+                'amount' => 0,
+                'description' => 'test',
+                'origin' => 'digitalefactuur',
+                'status' => 'success'
             ]);
     }
 
@@ -97,6 +107,7 @@ class TransactionOutTest extends TestCase
             ->seeJsonStructure([
                 'status',
                 'data' => [
+                    'id',
                     'account_id', 
                     'subscription_id',
                     'product_id',
@@ -104,8 +115,18 @@ class TransactionOutTest extends TestCase
                     'description',
                     'origin',
                     'created_at',
-                    'updated_at'
+                    'updated_at' 
                 ]
+            ])
+            ->seeJson([
+                'account_id' => 20003,
+                'state_id' => 2,
+                'product_id' => 1,
+                'subscription_id' => 1,
+                'amount' => 20,
+                'description' => 'This is the update test',
+                'origin' => 'digitalefactuur',
+                'status' => 'success'
             ]);
     }
 
@@ -120,7 +141,7 @@ class TransactionOutTest extends TestCase
             ->seeStatuscode(200)
             ->seeJsonStructure([
                 'status'
-            ]);
+            ])
+            ->seeJson();
     }
-
 }
