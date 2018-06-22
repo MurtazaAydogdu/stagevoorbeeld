@@ -52,16 +52,16 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
 
 $router->get('api/swagger', function () {
 
-    // $response = new Response();
-    // $response->setContent(file_get_contents(base_path("swagger.json")));
-    // $response->withHeaders(['Content-Type' => 'application/json']);
-
     $file = file_get_contents(base_path('swagger.json'));
 
     return response($file)
             ->header('Content-Type', 'application/json');;
 
     
+});
+
+$router->get('api/health', function () {
+    return response()->json(['status' => 'success', 'data' => ['healthty' => true]]);
 });
 
 $router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');

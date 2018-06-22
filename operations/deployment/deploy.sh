@@ -41,7 +41,7 @@ if [ -n "${DB_USERNAME}" ]; then
 fi
 
 ${SSH} ${host} -t "export \$(cat branch/${composeFolder}/.version | xargs) && docker stack deploy --with-registry-auth ${composeFolder} -c branch/${composeFolder}/docker-compose.yml --prune"
-${SSH} ${host} -t "export \$(cat branch/${composeFolder}/.version | xargs) && docker run --rm -e DB_CONNECTION=mysql -e DB_HOST=192.168.0.227 -e DB_PORT=3306 -e DB_DATABASE=dev_microservicetransactions -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} docker-registry.bjoola.nl/microservicetransactions/release:${VERSION} -- php artisan migrate --force"
+${SSH} ${host} -t "export \$(cat branch/${composeFolder}/.version | xargs) && docker run --rm -e DB_CONNECTION=mysql -e DB_HOST=192.168.0.227 -e DB_PORT=3306 -e DB_DATABASE=dev_microservice_transactions -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} docker-registry.bjoola.nl/microservicetransactions/release:${VERSION} -- php artisan migrate --force"
 # ${SSH} ${host} -t "export \$(cat branch/${composeFolder}/.version | xargs) && docker service create --restart-condition=none --name migrate_microservicetransactions -e DB_CONNECTION=mysql -e DB_HOST=192.168.0.227 -e DB_PORT=3306 -e DB_DATABASE=dev_bank_export_converter -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} -d docker-registry.bjoola.nl/microservicetransactions/release:${VERSION} migrate"
 
 # see deploy log
