@@ -210,31 +210,35 @@ class TransactionInController extends ApiController
      */
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required',
             'description' => 'required',
         ]);
 
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
         try {
             $transaction = new TransactionIn();
-            $transaction->account_id = ACCOUNT_ID;
+            $transaction->account_id = defined('ACCOUNT_ID') ? ACCOUNT_ID : $request->input('account_id');
+            $transaction->state_id = $request->input('state_id');
+            $transaction->payment_id = $request->input('payment_id');
             $transaction->amount = $request->input('amount');
             $transaction->description = $request->input('description');
-            $transaction->origin = ORIGIN_NAME;
+            $transaction->date = date('Y-m-d');
+            $transaction->origin = defined('ORIGIN_NAME') ? ORIGIN_NAME : $request->input('origin');
             $check = $transaction->save();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', 'digitalefactuur', $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }

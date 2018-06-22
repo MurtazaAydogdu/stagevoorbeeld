@@ -123,6 +123,24 @@
                     "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.event.transactionout.deleted.~~query.status~~.*.~~query.origin~~"
                 }
             }
+        },
+        {
+            "from": {
+                "rabbit": {
+                    "routingKey": "{{HOST_APP_NAME}}.{{HOST_API_VERSION}}.command.transactionin.add.*.*.*",
+                    "queue": "{{HOST_APP_NAME}}.[[from.rabbit.routingKey]]"
+                }
+            },
+            "to": {
+                "rest": {
+                    "endpoint": "{{HOST_BASE_URL}}/transaction/in/create",
+                    "method": "POST",
+                    "headers": {
+                        "Authorization": "~~properties.headers.headers.Authorization~~"
+                    }
+                }
+            }
         }
+
     ]
 }

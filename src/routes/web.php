@@ -31,9 +31,9 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     /**
      * This is the transaction-in route
      */
+    $router->post('transaction/in/create', 'TransactionInController@store');
     $router->get('transaction/in', 'TransactionInController@index');
     $router->get('transaction/in/{id}', 'TransactionInController@show');
-    $router->post('transaction/in/create', 'TransactionInController@store');
     $router->patch('transaction/in/edit/{id}', 'TransactionInController@update');
     $router->delete('transaction/in/delete/{id}', 'TransactionInController@delete');
     $router->delete('transaction/in/restore/{id}', 'TransactionInController@restore');
