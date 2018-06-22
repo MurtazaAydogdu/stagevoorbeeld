@@ -7,7 +7,7 @@ services:
       - traefik-net
     environment:
       - APP_URL=https://${VIRTUAL_HOST}
-      - APP_DEBUG=false
+      - APP_DEBUG=true
       - APP_LOG_LEVEL=info
       - DB_CONNECTION=mysql
       - DB_HOST=192.168.0.227
