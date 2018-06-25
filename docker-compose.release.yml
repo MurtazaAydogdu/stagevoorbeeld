@@ -48,10 +48,7 @@ services:
         - RABBIT_PORT=5672
         - RABBIT_USER=root
         - RABBIT_PASS=root
-        - RABBIT_EXCHANGE_NAME=amq.topic
         - RABBIT_QUEUE_EXPIRES=3600000
-        - PARSED_CONFIG_PATH=./src/lib/parsed-config.json
-        - RABBIT_QUEUE_EXCLUSIVE=false
         - RABBIT_QUEUE_DURABLE=true
         - RABBIT_QUEUE_MESSAGE_TTL=300000
       logging:
