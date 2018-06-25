@@ -19,7 +19,7 @@ services:
       - SESSION_DRIVER=file
       - SESSION_LIFETIME=120
       - QUEUE_DRIVER=sync
-      # Registrator config
+      # Registrator config fix iets
       - SERVICE_NAME=microservicetransactions
       - SERVICE_TAGS=traefik.enable=true
       - SERVICE_CHECK_HTTP=/api/health
