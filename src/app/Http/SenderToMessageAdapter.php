@@ -13,16 +13,7 @@ class SenderToMessageAdapter {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);       
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
             'Content-Type: application/json'                                                                         
-        ));                                               
-                                                                                                                                                                                  
-        $response = curl_exec($ch);
-        $error_msg = '';
-        if (curl_error($ch)) {
-            $error_msg = curl_error($ch);
-        }
-
-        var_dump($error_msg);
-
-        return "Test " . $response . " IP " . env('MESSAGE_ADAPTER');
+        ));                                                                                                                                                                                                             
+        curl_exec($ch);
     }
 }

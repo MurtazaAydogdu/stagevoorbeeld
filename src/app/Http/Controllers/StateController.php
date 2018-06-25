@@ -177,7 +177,7 @@ class StateController extends ApiController
         ]);
 
         if ($validator->fails()) {
-            return $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -188,12 +188,12 @@ class StateController extends ApiController
             $check = $state->save();
 
             if ($check) {
-                return $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', ORIGIN_NAME, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }       
         }
         catch (\Exception $e) {
-            return $this->senderToMessageAdapter->send('POST', '/state/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
