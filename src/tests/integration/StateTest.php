@@ -12,14 +12,14 @@ class StateTest extends TestCase
     /**
      * @test 
      */
-    // public function testIfWeCanCreateANewStateWithTheRightValues() {
+    public function testIfWeCanCreateANewStateWithTheRightValues() {
 
-    //     $state = factory(State::class)->create();
+        $state = factory(State::class)->create();
 
-    //     $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
-    //         ->seeStatusCode(200)
-    //         ->seeJson();
-    // }
+        $this->post('state/create', $state->toArray(), ['HTTP_Authorization' => env('ACCESS_TOKEN_TEST')])
+            ->seeStatusCode(200)
+            ->seeJson();
+    }
 
    /**
     * @test
