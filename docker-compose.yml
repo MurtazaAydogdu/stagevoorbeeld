@@ -16,7 +16,7 @@ services:
       options:
         max-size: "16m"
         max-file: "8"
-     environment:
+    environment:
       - MESSAGE_ADAPTER=message-adapter:81
   
   mysqldb:
