@@ -30,9 +30,6 @@ class SenderToMessageAdapter {
         
         $endpoint = env('MESSAGE_ADAPTER') . $url . '?status=' . $status . '&origin=' . $origin;
 
-        $response = $client->request('POST', $endpoint, ['json' => $data]);
-
-
-        return $response->response->getContent();
+        $response = $client->request($type, $endpoint, ['json' => $data]);
     }
 }
