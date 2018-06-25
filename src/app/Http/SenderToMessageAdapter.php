@@ -18,5 +18,7 @@ class SenderToMessageAdapter {
         ));                                                                                                                   
                                                                                                                             
         $result = curl_exec($ch);
+
+        return $result;
     }
 }
