@@ -21,11 +21,7 @@ class SenderToMessageAdapter {
                                                                                                                                                                                   
         $response = curl_exec($ch);
 
-        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $header = substr($response, 0, $header_size);
-        $body = substr($response, $header_size);
 
-
-        return $body;
+        return $response;
     }
 }
