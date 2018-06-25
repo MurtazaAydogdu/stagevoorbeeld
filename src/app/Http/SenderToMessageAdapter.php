@@ -22,7 +22,12 @@ class SenderToMessageAdapter {
        }
 
        catch(\Exception $e) {
-           echo $e->getMessage();
+        $myfile = fopen("newfile.txt", "w") or die("Unable to open file!");
+        $txt = "John Doe\n";
+        fwrite($myfile, $txt);
+        $txt = $e->getMessage();
+        fwrite($myfile, $txt);
+        fclose($myfile);
        }
     }
 }
