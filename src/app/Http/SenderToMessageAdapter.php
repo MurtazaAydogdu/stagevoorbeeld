@@ -20,6 +20,6 @@ class SenderToMessageAdapter {
         $response = curl_exec($ch);
 
 
-        return "Test " . $response . " IP " . env('MESSAGE_ADAPTER');
+    return "Test " . $response . " IP " . env('MESSAGE_ADAPTER');
     }
 }
