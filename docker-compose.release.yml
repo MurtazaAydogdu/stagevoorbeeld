@@ -37,7 +37,7 @@ services:
         window: 120s
   
   message-adapter:
-      image: docker-registry.bjoola.nl/message-adapter/release:0.1.0-1893a5afcc
+      image: docker-registry.bjoola.nl/message-adapter/release:0.2.0-5b61371fcc
       ports:
        - "81:3000"
       environment:
