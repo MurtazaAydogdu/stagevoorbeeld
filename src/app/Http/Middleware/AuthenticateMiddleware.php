@@ -47,11 +47,9 @@ class AuthenticateMiddleware
                 }
             }
             catch (\Exception $e) {
-                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
                 return $this->responseWrapper->badRequest(array('message' => 'The given JWT token is invalid or expired' , 'code' => 'InvalidJWT'));
             }
         }
-        $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => 'test')));
         return $this->responseWrapper->badRequest(array('message' => 'The required headers Authorization is missing or empty', 'code' => 'MissingHeaders'));
     }
 }
