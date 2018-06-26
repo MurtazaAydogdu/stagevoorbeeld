@@ -63,5 +63,3 @@ $router->get('api/swagger', function () {
 $router->get('api/health', function () {
     return response()->json(['status' => 'success', 'data' => ['healthty' => true]]);
 });
-
-$router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');

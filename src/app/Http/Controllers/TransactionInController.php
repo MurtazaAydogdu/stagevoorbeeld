@@ -217,7 +217,7 @@ class TransactionInController extends ApiController
         ]);
 
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -233,12 +233,12 @@ class TransactionInController extends ApiController
             $check = $transaction->save();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', 'digitalefactuur', $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', 'digitalefactuur', $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }

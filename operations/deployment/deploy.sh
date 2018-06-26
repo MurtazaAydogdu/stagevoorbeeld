@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # deploy.sh host [baseVhost]
-# eg $ ./operations/deployment/deploy.dev.microstore.bjoola.com.sh dev.microstore.bjoola.com dev.microstore.bjoola.com 
+# eg $ ./operations/deployment/deploy.dev.microservicetransactions.bjoola.com.sh dev.microservicetransactions.bjoola.com dev.microservicetransactions.bjoola.com 
 
 host=${1}
 [ -z ${host} ] && echo "host missing" && exit 1
@@ -56,8 +56,8 @@ generate_webhook_data()
   	"username": "Deploy Bot",
   	"icon_emoji": ":robot_face:",
   	"attachments": [{
-  		"fallback": "Bank Export Converter deployed successfully: ${VERSION:-${APP_VERSION}-${GIT_COMMIT:0:10}}",
-  		"pretext": "Bank Export Converter deployed successfully: ${VERSION:-${APP_VERSION}-${GIT_COMMIT:0:10}}",
+  		"fallback": "Microservicetransactions deployed successfully: ${VERSION:-${APP_VERSION}-${GIT_COMMIT:0:10}}",
+  		"pretext": "Microservicetransactions deployed successfully: ${VERSION:-${APP_VERSION}-${GIT_COMMIT:0:10}}",
   		"color": "#7EF66B",
   		"fields": [{
   			"title": "Version",
