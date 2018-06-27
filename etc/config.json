@@ -140,7 +140,23 @@
                     }
                 }
             }
+        },
+        {
+            "from": {
+                "rabbit": {
+                    "routingKey": "microservicesubscriptions.0.command.transactions.created.success.digitalefactuur",
+                    "queue": "{{HOST_APP_NAME}}.[[from.rabbit.routingKey]]"
+                }
+            },
+            "to": {
+                "rest": {
+                    "endpoint": "{{HOST_BASE_URL}}/transaction/out/create",
+                    "method": "POST",
+                    "headers": {
+                        "authorization": "~~properties.headers.headers.authorization~~"
+                    }
+                }
+            }
         }
-
     ]
 }
