@@ -99,7 +99,7 @@ class TransactionInController extends ApiController
     public function index(Request $request)
     {
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionIn::where('origin', $origin)->get();
 
@@ -144,7 +144,7 @@ class TransactionInController extends ApiController
     public function show(Request $request, $id)
     {
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionIn::where('origin', $origin)->findOrFail($id);
 
@@ -220,7 +220,7 @@ class TransactionInController extends ApiController
             'description' => 'required',
         ]);
 
-        $origin = $request->input('origin', $request->input('payload.origin'));
+        $origin = $request->input('payload.origin');
 
         if ($validator->fails()) {
             $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
@@ -229,7 +229,7 @@ class TransactionInController extends ApiController
 
         try {
             $transaction = new TransactionIn();
-            $transaction->account_id = $request->input('account_id', $request->input('payload.accountId'));
+            $transaction->account_id = $request->input('payload.accountId', $request->input('account_id'));
             $transaction->state_id = $request->input('state_id');
             $transaction->payment_id = $request->input('payment_id');
             $transaction->amount = $request->input('amount');
@@ -318,7 +318,7 @@ class TransactionInController extends ApiController
                 'description' => 'required',
             ]);
 
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
     
             if ($validator->fails()) {
                 $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
@@ -379,7 +379,7 @@ class TransactionInController extends ApiController
     public function delete(Request $request, $id)
     {
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionIn::where('origin', $origin)->findOrFail($id);
             $deleted = $transaction->delete();

@@ -176,7 +176,7 @@ class StateController extends ApiController
             'description' => 'required|string'
         ]);
 
-        $origin = $request->input('origin', $request->input('payload.origin'));
+        $origin = $request->input('payload.origin');
 
         if ($validator->fails()) {
             $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
@@ -252,7 +252,7 @@ class StateController extends ApiController
             'description' => 'required|string'
         ]);
 
-        $origin = $request->input('origin', $request->input('payload.origin'));
+        $origin = $request->input('payload.origin');
 
 
         if ($validator->fails()) {
@@ -314,7 +314,7 @@ class StateController extends ApiController
         try {
             $state = State::findOrFail($id);
 
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
 
             if ($state->delete()) {

@@ -32,6 +32,10 @@ export VERSION=${VERSION:-${APP_VERSION}-${GIT_COMMIT:0:10}}
 echo VERSION=${VERSION} | ${SSH} ${host} "cat > branch/${composeFolder}/.version"
 echo VIRTUAL_HOST=${vhost} | ${SSH} ${host} "cat >> branch/${composeFolder}/.version"
 
+if [ -n "${ADAPTER_CONFIG}" ]; then
+  echo ADAPTER_CONFIG=${ADAPTER_CONFIG} | ${SSH} ${host} "cat >> branch/${composeFolder}/.version"
+fi
+
 if [ -n "${DB_PASSWORD}" ]; then
   echo DB_PASSWORD=${DB_PASSWORD} | ${SSH} ${host} "cat >> branch/${composeFolder}/.version"
 fi

@@ -101,7 +101,7 @@ class TransactionOutController extends ApiController
     public function index(Request $request){
     
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionOut::where('origin', $origin)->get();
 
@@ -146,7 +146,7 @@ class TransactionOutController extends ApiController
     public function show(Request $request, $id){
 
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionOut::where('origin', $origin)->where('account_id', $id)->get();
             if ($transaction) {
@@ -221,14 +221,14 @@ class TransactionOutController extends ApiController
             'data' => 'required|array'
         ]);
 
-        $origin = $request->input('origin', $request->input('payload.origin'));
+        $origin = $request->input('payload.origin');
 
 
         if ($validator->fails()) {
             $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
-        return $this->checkTotalSubscriptionsAndSave($request->data, $request->description);
+        return $this->checkTotalSubscriptionsAndSave($request->data, $request);
     }
 
     /**
@@ -300,13 +300,16 @@ class TransactionOutController extends ApiController
             'description' => 'required'
         ]);
 
+        $origin = $request->input('payload.origin');
+
+
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $transaction = TransactionOut::where('origin', $origin)->findOrFail($id);
 
             if ($transaction) {
                 $transaction->product_id = $request->product_id;
@@ -316,19 +319,19 @@ class TransactionOutController extends ApiController
                 $updated = $transaction->update();
 
                 if ($updated) {
-                    $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                    $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'success', $origin, $this->responseWrapper->ok($transaction));
                     return $this->responseWrapper->ok($transaction);
                 }
             }
         }
 
         catch (ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'failed', $origin, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/out/edit', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
 
@@ -365,7 +368,7 @@ class TransactionOutController extends ApiController
     public function delete(Request $request, $id){
         
         try {
-            $origin = $request->input('origin', $request->input('payload.origin'));
+            $origin = $request->input('payload.origin');
 
             $transaction = TransactionOut::where('origin', $origin)->findOrFail($id);
 
@@ -387,14 +390,12 @@ class TransactionOutController extends ApiController
         }
     }
 
-    private function checkRabbitValues($data) {
+    private function checkRabbitValues($data, $request) {
         if (!empty($data['rabbit_account_id']) && !empty($data['rabbit_origin'])) {
-            if (!defined('RABBIT_ACCOUNT_ID')) define('RABBIT_ACCOUNT_ID', $data['rabbit_account_id']);
-            if (!defined('RABBIT_ORIGIN_NAME')) define('RABBIT_ORIGIN_NAME', $data['rabbit_origin']);
-            return [RABBIT_ACCOUNT_ID, RABBIT_ORIGIN_NAME];
+            return [$data['rabbit_account_id'], $data['rabbit_origin']];
         }
         else {
-            return [ACCOUNT_ID, ORIGIN_NAME];
+            return [$request->input('payload.accountId'), $request->input('payload.origin')];
         }
     }
 
@@ -405,16 +406,17 @@ class TransactionOutController extends ApiController
      * If the number in the database is smaller than the quantity of the subscriptionExceptionRules, this means that the user can send the prodcut (free). 
      * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called.
      */
-    private function checkTotalSubscriptionsAndSave($arrRules, $description) {
+    private function checkTotalSubscriptionsAndSave($arrRules, $request) {
 
         //get the last element uit the array (account_id and origin);
         $data = end($arrRules);
 
+        $description = $request->input('description');
+       
         //check whether the request come from rabbit or from a rest call.
-        $res = $this->checkRabbitValues($data);
+        $res = $this->checkRabbitValues($data, $request);
 
         //get the first element uit the array.
-
         $selectedObj = array_shift($arrRules);
 
         //get the transaction out the transaction_out table. $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
@@ -439,11 +441,11 @@ class TransactionOutController extends ApiController
             }
 
             if (!empty($tmpArrRules)) {
-                return $this->checkTotalSubscriptionsAndSave($tmpArrRules, $description);
+                return $this->checkTotalSubscriptionsAndSave($tmpArrRules, $request);
             }
             else {
                 // $res[0] and $res[1] are equal to the value of ACCOUNT_ID and ORIGIN NAME OR RABBIT_ACCOUNT_ID and RABBIT_ORIGIN. 
-                return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $res[0] ,$res[1], $description);
+                return $this->checkIfUserHasEnoughTransactionOutAmountAndSave($selectedObj, $res[0], $res[1], $description);
             }
         }
     }
