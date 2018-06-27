@@ -98,10 +98,12 @@ class TransactionOutController extends ApiController
      *     )
      * )
      */
-    public function index(){
+    public function index(Request $request){
     
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->get();
+            $origin = $request->input('origin', $request->input('payload.origin'));
+
+            $transaction = TransactionOut::where('origin', $origin)->get();
 
             if ($transaction !=null && !empty(json_decode($transaction))) {
                 return $this->responseWrapper->ok($transaction);
@@ -141,10 +143,12 @@ class TransactionOutController extends ApiController
      *     )
      * )
      */
-    public function show($id){
+    public function show(Request $request, $id){
 
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->where('account_id', $id)->get();
+            $origin = $request->input('origin', $request->input('payload.origin'));
+
+            $transaction = TransactionOut::where('origin', $origin)->where('account_id', $id)->get();
             if ($transaction) {
                 return $this->responseWrapper->ok($transaction);
             }
@@ -217,8 +221,11 @@ class TransactionOutController extends ApiController
             'data' => 'required|array'
         ]);
 
+        $origin = $request->input('origin', $request->input('payload.origin'));
+
+
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
         return $this->checkTotalSubscriptionsAndSave($request->data, $request->description);
@@ -355,25 +362,27 @@ class TransactionOutController extends ApiController
      *     )
      * )
      */
-    public function delete($id){
+    public function delete(Request $request, $id){
         
         try {
-            $transaction = TransactionOut::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $origin = $request->input('origin', $request->input('payload.origin'));
+
+            $transaction = TransactionOut::where('origin', $origin)->findOrFail($id);
 
             $deleted = $transaction->delete();
 
             if ($deleted) {
-                $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'success', $origin, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'failed', $origin, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/out/delete', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -486,12 +495,12 @@ class TransactionOutController extends ApiController
             $saved = $transaction->save();
 
             if ($saved) {
-                $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'success', $origin, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -507,7 +516,7 @@ class TransactionOutController extends ApiController
         $totalTransactionOut = $this->countTransactionOutByAccountId($accountId, $origin);
     
         if ( $totalTransactionIn < ($totalTransactionOut + $obj['price'])) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', ORIGIN_NAME, $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable')));
+            $this->senderToMessageAdapter->send('POST', '/transaction/out/create', 'error', $origin, $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable')));
             return $this->responseWrapper->reject(array('message' => 'The requested feature is currently unavailable because of insufficient balance for transaction', 'code' => 'FeatureUnavailable'));
         }
         else {

@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Http\ResponseWrapper;
-use App\Http\SenderToMessageAdapter;
 use AuthSDK;
 require_once dirname(__DIR__).'./../../vendor/autoload.php';
 
@@ -15,7 +14,6 @@ class AuthenticateMiddleware
 
     public function __construct() {
         $this->responseWrapper = new ResponseWrapper();
-        $this->senderToMessageAdapter = new SenderToMessageAdapter();
     }
 
     /**
@@ -40,8 +38,7 @@ class AuthenticateMiddleware
             try {
                 if ($token = $tokenService->verifyAccessToken($token)) {
                     if ($token['exp'] > strtotime(date('Y-m-d'))) {
-                        if (!defined('ORIGIN_NAME')) define('ORIGIN_NAME', $token['origin']);
-                        if (!defined('ACCOUNT_ID')) define('ACCOUNT_ID', $token['accountId']);
+                        $request->merge(['payload' => $token]);
                         return $next($request);
                     }
                 }

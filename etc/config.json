@@ -3,7 +3,7 @@
         "definitions": {
             "HOST_APP_NAME": "transaction_api",
             "HOST_API_VERSION": "2",
-            "HOST_BASE_URL": "http://microservicetransactions.zerok.nl/"
+            "HOST_BASE_URL": "http://microservicetransactions.zerok.nl"
         }
     },
     "mappings": [

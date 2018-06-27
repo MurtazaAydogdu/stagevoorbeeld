@@ -42,6 +42,7 @@ class StateController extends ApiController
 {
     private $responseWrapper;
     private $senderToMessageAdapter;
+    private $origin;
 
     public function __construct()
     {
@@ -116,7 +117,6 @@ class StateController extends ApiController
      * )
      */
     public function show($id) {
-
         try {
             $state = State::findOrFail($id);
             
@@ -176,8 +176,10 @@ class StateController extends ApiController
             'description' => 'required|string'
         ]);
 
+        $origin = $request->input('origin', $request->input('payload.origin'));
+
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -188,12 +190,12 @@ class StateController extends ApiController
             $check = $state->save();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('POST', '/state/create' , 'success', $origin, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }       
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('POST', '/state/create', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/state/create', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -250,8 +252,11 @@ class StateController extends ApiController
             'description' => 'required|string'
         ]);
 
+        $origin = $request->input('origin', $request->input('payload.origin'));
+
+
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('PATCH','/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('PATCH','/state/edit', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
@@ -262,16 +267,16 @@ class StateController extends ApiController
             $check = $state->update();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', $origin, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'failed', $origin, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
         catch(\Exception $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/state/edit', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -304,23 +309,26 @@ class StateController extends ApiController
      *     )
      * )
      */
-    public function delete($id){
+    public function delete(Request $request, $id){
         
         try {
             $state = State::findOrFail($id);
 
+            $origin = $request->input('origin', $request->input('payload.origin'));
+
+
             if ($state->delete()) {
-                $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->ok($state));
+                $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', $origin, $this->responseWrapper->ok($state));
                 return $this->responseWrapper->ok($state);
             }
         }
         catch(ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'failed', $origin, $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested state has not been found', 'code' => 'ResourceNotFound'));
         }
 
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('DELETE', '/state/delete', 'error', $origin, $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code'=>'UnknownError', 'stack' => $e->getMessage()));
         }
     }
