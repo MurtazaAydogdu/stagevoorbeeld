@@ -14,7 +14,7 @@ $ dobi dev
 If you wan't to make local changes to your `docker-compose.yml` file you should create a `docker-compose.override.yml`. Docker compose applies the changes in this file automatically.
 
 ## Database
-
+Microservice-transactions uses a Mysql instance (`mysqldb` in `docker-compose.yml`).
 
 ## Testing
 [PHPUNIT](https://phpunit.de/) is used to run tests. 
