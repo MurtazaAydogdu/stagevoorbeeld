@@ -96,10 +96,12 @@ class TransactionInController extends ApiController
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->get();
+            $origin = $request->input('payload.origin');
+
+            $transaction = TransactionIn::where('origin', $origin)->get();
 
             if ($transaction != null && !empty(json_decode($transaction))) {
                 return $this->responseWrapper->ok($transaction);
@@ -139,10 +141,12 @@ class TransactionInController extends ApiController
      *     )
      * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $origin = $request->input('payload.origin');
+
+            $transaction = TransactionIn::where('origin', $origin)->findOrFail($id);
 
             if ($transaction != null && !empty(json_decode($transaction))) {
                 return $this->responseWrapper->ok($transaction);
@@ -210,31 +214,37 @@ class TransactionInController extends ApiController
      */
     public function store(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required',
             'description' => 'required',
         ]);
 
+        $origin = $request->input('payload.origin');
+
         if ($validator->fails()) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
             return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
         }
 
         try {
             $transaction = new TransactionIn();
-            $transaction->account_id = ACCOUNT_ID;
+            $transaction->account_id = $request->input('payload.accountId', $request->input('account_id'));
+            $transaction->state_id = $request->input('state_id');
+            $transaction->payment_id = $request->input('payment_id');
             $transaction->amount = $request->input('amount');
             $transaction->description = $request->input('description');
-            $transaction->origin = ORIGIN_NAME;
+            $transaction->date = date('Y-m-d');
+            $transaction->origin = $origin;
             $check = $transaction->save();
 
             if ($check) {
-                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'success', $origin, $this->responseWrapper->ok($transaction));
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('POST', '/transaction/in/create', 'failed', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -307,13 +317,15 @@ class TransactionInController extends ApiController
                 'amount' => 'required',
                 'description' => 'required',
             ]);
+
+            $origin = $request->input('payload.origin');
     
             if ($validator->fails()) {
-                $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
+                $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', $origin, $this->responseWrapper->badRequest(array('message' => 'The required fields '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields')));
                 return $this->responseWrapper->badRequest(array('message' => 'The required field(s) '. $validator->errors() . ' are missing or empty from the body', 'code' => 'MissingFields'));
             }
 
-            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $transaction = TransactionIn::where('origin', $origin)->findOrFail($id);
 
             if ($transaction) {
                 $transaction->amount = $request->input('amount');
@@ -321,17 +333,17 @@ class TransactionInController extends ApiController
                 $save = $transaction->update();
 
                 if ($save){
-                    $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                    $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'success', $origin, $this->responseWrapper->ok($transaction));
                     return $this->responseWrapper->ok($transaction);
                 }
             }
         }
         catch (ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'failed', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch (\Exception $e) {
-            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'error', ORIGIN_NAME, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('PATCH', '/transaction/in/edit', 'error', $origin, $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }
@@ -364,24 +376,26 @@ class TransactionInController extends ApiController
      *     )
      * )
      */
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         try {
-            $transaction = TransactionIn::where('origin', ORIGIN_NAME)->findOrFail($id);
+            $origin = $request->input('payload.origin');
+
+            $transaction = TransactionIn::where('origin', $origin)->findOrFail($id);
             $deleted = $transaction->delete();
 
             if ($deleted) {
-                $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'success', ORIGIN_NAME, $this->responseWrapper->ok($transaction));
+                $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'success', $origin, $this->responseWrapper->ok($transaction));
 
                 return $this->responseWrapper->ok($transaction);
             }
         }
         catch (ModelNotFoundException $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'failed', ORIGIN_NAME, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'failed', $origin, $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound')));
             return $this->responseWrapper->notFound(array('message' => 'The requested transaction has not been found', 'code' => 'ResourceNotFound'));
         }
         catch(\Exception $e) {
-            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'error', ORIGIN_NAME,$this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
+            $this->senderToMessageAdapter->send('DELETE', '/transaction/in/delete', 'error', $origin,$this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage())));
             return $this->responseWrapper->serverError(array('code' => 'UnknownError', 'stack' => $e->getMessage()));
         }
     }

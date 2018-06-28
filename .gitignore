@@ -9,3 +9,4 @@ Homestead.yaml
 docker-compose.override.yml
 setenv.Murtaza
 /src/auth.json
+/release

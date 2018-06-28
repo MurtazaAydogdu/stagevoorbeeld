@@ -10,6 +10,7 @@ require_once dirname(__DIR__).'./../../vendor/autoload.php';
 class AuthenticateMiddleware
 {
     private $responseWrapper;
+    private $senderToMessageAdapter;
 
     public function __construct() {
         $this->responseWrapper = new ResponseWrapper();
@@ -24,7 +25,7 @@ class AuthenticateMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $token = $request->header('Authorization');
+        $token = $request->header('authorization');
 
         if ($token) {
 
@@ -37,8 +38,7 @@ class AuthenticateMiddleware
             try {
                 if ($token = $tokenService->verifyAccessToken($token)) {
                     if ($token['exp'] > strtotime(date('Y-m-d'))) {
-                        if (!defined('ORIGIN_NAME')) define('ORIGIN_NAME', $token['origin']);
-                        if (!defined('ACCOUNT_ID')) define('ACCOUNT_ID', $token['accountId']);
+                        $request->merge(['payload' => $token]);
                         return $next($request);
                     }
                 }

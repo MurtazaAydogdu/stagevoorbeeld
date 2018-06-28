@@ -31,9 +31,9 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     /**
      * This is the transaction-in route
      */
+    $router->post('transaction/in/create', 'TransactionInController@store');
     $router->get('transaction/in', 'TransactionInController@index');
     $router->get('transaction/in/{id}', 'TransactionInController@show');
-    $router->post('transaction/in/create', 'TransactionInController@store');
     $router->patch('transaction/in/edit/{id}', 'TransactionInController@update');
     $router->delete('transaction/in/delete/{id}', 'TransactionInController@delete');
     $router->delete('transaction/in/restore/{id}', 'TransactionInController@restore');
@@ -52,10 +52,6 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
 
 $router->get('api/swagger', function () {
 
-    // $response = new Response();
-    // $response->setContent(file_get_contents(base_path("swagger.json")));
-    // $response->withHeaders(['Content-Type' => 'application/json']);
-
     $file = file_get_contents(base_path('swagger.json'));
 
     return response($file)
@@ -64,4 +60,6 @@ $router->get('api/swagger', function () {
     
 });
 
-$router->post('transaction/in/payment', 'TransactionInController@createMolliePayment');
+$router->get('api/health', function () {
+    return response()->json(['status' => 'success', 'data' => ['healthty' => true]]);
+});
