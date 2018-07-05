@@ -3,7 +3,7 @@ Microservices for registering the number of products that a user has available p
 
 ## Usage
 ```bash
-# Sets up VM with docker environment
+# Sets up VM with docker environment asfasdfasfasdfsa
 $ source setenv
 # Setup environment variables
 $ cp .env.example .env
