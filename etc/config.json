@@ -150,7 +150,7 @@
             },
             "to": {
                 "rest": {
-                    "endpoint": "{{HOST_BASE_URL}}/transaction/out/create",
+                    "endpoint": "http://192.168.88.100:8000/transaction/out/create",
                     "method": "POST",
                     "headers": {
                         "authorization": "~~properties.headers.headers.authorization~~"

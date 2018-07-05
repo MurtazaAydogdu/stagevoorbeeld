@@ -406,6 +406,8 @@ class TransactionOutController extends ApiController
      * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called.
      */
     private function checkTotalSubscriptionsAndSave($arrRules, $request) {
+        
+        // $arrRules = json_decode($arrRules->response->getContent(), true);
 
         //get the last element uit the array (account_id and origin);
         $data = end($arrRules);

@@ -10,7 +10,6 @@ require_once dirname(__DIR__).'./../../vendor/autoload.php';
 class AuthenticateMiddleware
 {
     private $responseWrapper;
-    private $senderToMessageAdapter;
 
     public function __construct() {
         $this->responseWrapper = new ResponseWrapper();
