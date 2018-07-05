@@ -217,7 +217,6 @@ class TransactionOutController extends ApiController
     public function store(Request $request) {
 
         $validator = Validator::make($request->all(), [
-            'description' => 'required',
             'data' => 'required|array'
         ]);
 
