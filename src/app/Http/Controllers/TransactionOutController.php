@@ -491,7 +491,7 @@ class TransactionOutController extends ApiController
             $transaction->subscription_id = $subscription_id;
             $transaction->product_id = $product_id;
             $transaction->amount = $price;
-            $transaction->description = !empty($description) ? $description : "No subscription given";
+            $transaction->description = !empty($description) ? $description : "No description given";
             $transaction->origin = $origin;
             $saved = $transaction->save();
 
