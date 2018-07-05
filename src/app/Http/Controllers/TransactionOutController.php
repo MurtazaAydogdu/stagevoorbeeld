@@ -217,7 +217,6 @@ class TransactionOutController extends ApiController
     public function store(Request $request) {
 
         $validator = Validator::make($request->all(), [
-            'description' => 'required',
             'data' => 'required|array'
         ]);
 
@@ -407,7 +406,7 @@ class TransactionOutController extends ApiController
      * It also looks recursively whether the user has more subscriptionExceptionRules or not. If not, the checkIfUserHasEnoughTransactionOutAmountAndSave function is called.
      */
     private function checkTotalSubscriptionsAndSave($arrRules, $request) {
-
+        
         //get the last element uit the array (account_id and origin);
         $data = end($arrRules);
 
@@ -492,7 +491,7 @@ class TransactionOutController extends ApiController
             $transaction->subscription_id = $subscription_id;
             $transaction->product_id = $product_id;
             $transaction->amount = $price;
-            $transaction->description = $description;
+            $transaction->description = !empty($description) ? $description : "No description given";
             $transaction->origin = $origin;
             $saved = $transaction->save();
 
